@@ -1,4 +1,4 @@
-package com.example.examplemod.platform.services;
+package com.iso2t.sverve.platform.services;
 
 public interface IPlatformHelper {
 

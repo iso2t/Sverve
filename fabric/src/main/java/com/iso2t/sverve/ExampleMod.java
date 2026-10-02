@@ -1,4 +1,4 @@
-package com.example.examplemod;
+package com.iso2t.sverve;
 
 import net.fabricmc.api.ModInitializer;
 

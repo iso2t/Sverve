@@ -1,6 +1,6 @@
-package com.example.examplemod;
+package com.iso2t.sverve;
 
-import com.example.examplemod.platform.Services;
+import com.iso2t.sverve.platform.Services;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Items;
 
