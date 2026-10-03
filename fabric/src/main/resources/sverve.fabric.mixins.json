@@ -3,10 +3,10 @@
   "minVersion": "0.8",
   "package": "com.iso2t.sverve.mixin",
   "compatibilityLevel": "JAVA_25",
-  "mixins": [],
-  "client": [
-    "MixinTitleScreen"
+  "mixins": [
+    "LivingEntityConsumptionMixin"
   ],
+  "client": [],
   "server": [],
   "injectors": {
     "defaultRequire": 1

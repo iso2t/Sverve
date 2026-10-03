@@ -13,6 +13,11 @@ neoForge {
 }
 
 dependencies {
+    // Loader-specific Easy Config mods provide these classes at runtime.
+    compileOnly("com.iso2t.easyconfig:api:${easyconfig_api_version}")
+    testImplementation("com.iso2t.easyconfig:api:${easyconfig_api_version}")
+    testImplementation('org.junit.jupiter:junit-jupiter:6.0.0')
+    testRuntimeOnly('org.junit.platform:junit-platform-launcher:6.0.0')
     // Fabric and NeoForge both bundle Fabric Mixin, so it is safe to use it in common
     // If you need to update, check what version they are using to see what is compatible
     // https://github.com/neoforged/NeoForge/blob/26.3.x/gradle.properties#L37
@@ -21,6 +26,16 @@ dependencies {
     // Fabric and NeoForge both bundle MixinExtras, so it is safe to use it in common
     compileOnly(annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.3'))
 
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+}
+
+// NeoForm exposes vanilla only to main by default. Persistence tests use vanilla NBT classes.
+sourceSets.test {
+    compileClasspath += sourceSets.main.compileClasspath
+    runtimeClasspath += sourceSets.main.compileClasspath
 }
 
 configurations {
@@ -49,7 +64,7 @@ def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', Strin
     }
 }
 sourceSets.configureEach {
-    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName].each { variant->
+    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName].each { variant ->
         configurations.named(variant) {
             attributes {
                 attribute(loaderAttribute, 'common')

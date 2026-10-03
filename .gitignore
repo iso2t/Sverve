@@ -22,7 +22,10 @@ build
 eclipse
 run
 runs
+/common/logs/
 
 .idea
 /neoforge/src/generated/resources/.cache/
 /fabric/src/generated/resources/.cache/
+/docs/
+/common/src/test/

@@ -1,0 +1,11 @@
+{
+  "death.attack.sverve.dehydration": "%1$s died of dehydration",
+  "death.attack.sverve.dehydration.player": "%1$s died of dehydration while escaping %2$s",
+  "death.attack.sverve.freezing": "%1$s froze to death",
+  "death.attack.sverve.freezing.player": "%1$s froze to death while escaping %2$s",
+  "death.attack.sverve.overheating": "%1$s died of heatstroke",
+  "death.attack.sverve.overheating.player": "%1$s died of heatstroke while escaping %2$s",
+  "enchantment.sverve.insulation": "Insulation",
+  "enchantment.sverve.heat_protection": "Heat Protection",
+  "enchantment.sverve.thermal_protection": "Thermal Protection"
+}

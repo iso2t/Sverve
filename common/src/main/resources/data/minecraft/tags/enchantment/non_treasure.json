@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "sverve:insulation",
+    "sverve:heat_protection",
+    "sverve:thermal_protection"
+  ]
+}

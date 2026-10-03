@@ -21,12 +21,39 @@ dependencies {
     implementation "com.terraformersmc:modmenu:21.0.0"
 }
 
+sourceSets {
+    gametest {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
 loom {
+    mods {
+        sverve { sourceSet sourceSets.main }
+        sverve_test { sourceSet sourceSets.gametest }
+    }
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
     if (aw.exists()) {
         accessWidenerPath.set(aw)
     }
     runs {
+        clientGametest {
+            client()
+            sourceSet.set('gametest')
+            vmArg '-Dfabric.client.gametest'
+            vmArg '-Dfabric.client.gametest.modid=sverve_test'
+            ideConfigGenerated(false)
+            runDir('build/client-gametest')
+        }
+        gametest {
+            server()
+            sourceSet.set('gametest')
+            vmArg '-Dfabric-api.gametest'
+            vmArg "-Dfabric-api.gametest.report-file=${layout.buildDirectory.file('reports/gametest.xml').get().asFile}"
+            ideConfigGenerated(false)
+            runDir('build/gametest')
+        }
         client {
             client()
             setConfigName('Fabric Client')
@@ -52,7 +79,7 @@ def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', Strin
     }
 }
 sourceSets.configureEach {
-    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName].each { variant->
+    [it.compileClasspathConfigurationName, it.runtimeClasspathConfigurationName].each { variant ->
         configurations.named(variant) {
             attributes {
                 attribute(loaderAttribute, 'fabric')

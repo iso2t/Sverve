@@ -3,6 +3,13 @@ plugins {
     id 'net.neoforged.moddev'
 }
 
+sourceSets {
+    hudCheck {
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
+}
+
 neoForge {
     version = neoforge_version
     // Automatically enable neoforge AccessTransformers if the file exists
@@ -10,14 +17,27 @@ neoForge {
     if (at.exists()) {
         accessTransformers.from(at.absolutePath)
     }
+    mods {
+        "${mod_id}" { sourceSet sourceSets.main }
+        sverve_hud_check { sourceSet sourceSets.hudCheck }
+    }
     runs {
         configureEach {
+            loadedMods.set([project.neoForge.mods.getByName(project.mod_id)])
             systemProperty('neoforge.enabledGameTestNamespaces', mod_id)
             ideName = "NeoForge ${it.name.capitalize()} (${project.path})" // Unify the run config names with fabric
         }
         client {
             client()
             gameDirectory = this.mkdir(this.file('runs/client'))
+        }
+        hudCheck {
+            client()
+            sourceSet = sourceSets.hudCheck
+            loadedMods.set([project.neoForge.mods.getByName(project.mod_id),
+                            project.neoForge.mods.getByName('sverve_hud_check')])
+            gameDirectory = project.file('build/hud-check')
+            programArguments.addAll '--quickPlaySingleplayer', 'thirst-check'
         }
         data {
             clientData()
@@ -32,11 +52,6 @@ neoForge {
             gameDirectory = this.mkdir(this.file('runs/server'))
         }
     }
-    mods {
-        "${mod_id}" {
-            sourceSet sourceSets.main
-        }
-    }
 }
 
 dependencies {
@@ -44,6 +59,46 @@ dependencies {
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+// Reuse a generated Fabric test world as a vanilla fixture, in a separate NeoForge run directory.
+tasks.register('prepareHudCheckWorld', Sync) {
+    outputs.upToDateWhen { false }
+    from {
+        def saves = project(':fabric').file('build/client-gametest/saves')
+        def fixture = saves.listFiles()?.findAll { new File(it, 'level.dat').isFile() }
+                ?.max { new File(it, 'level.dat').lastModified() }
+        if (fixture == null) throw new GradleException('Run :fabric:runClientGametest first to generate a test world.')
+        fixture
+    }
+    into layout.buildDirectory.dir('hud-check/saves/thirst-check')
+    doLast {
+        def runDirectory = layout.buildDirectory.dir('hud-check').get().asFile
+        new File(runDirectory, 'result.txt').text = 'RUNNING\n'
+        new File(runDirectory, 'options.txt').text = '''onboardAccessibility:false
+tutorialStep:none
+renderDistance:5
+simulationDistance:5
+guiScale:2
+pauseOnLostFocus:false
+chatVisibility:2
+soundCategory_music:0.0
+maxFps:120
+'''
+    }
+}
+
+tasks.named('runHudCheck') {
+    dependsOn tasks.named('prepareHudCheckWorld')
+    doFirst {
+        layout.buildDirectory.file('hud-check/result.txt').get().asFile.text = 'RUNNING\n'
+    }
+    doLast {
+        def report = layout.buildDirectory.file('hud-check/result.txt').get().asFile
+        if (!report.isFile() || !report.text.startsWith('PASS')) {
+            throw new GradleException(report.isFile() ? report.text : 'The NeoForge HUD check did not finish.')
+        }
+    }
+}
 
 // Implement mcgradleconventions loader attribute
 def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)

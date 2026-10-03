@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+    "sverve:dehydration",
+    "sverve:freezing",
+    "sverve:overheating"
+  ]
+}

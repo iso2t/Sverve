@@ -1,0 +1,7 @@
+{
+  "replace": false,
+  "values": [
+    "sverve:freezing",
+    "sverve:overheating"
+  ]
+}

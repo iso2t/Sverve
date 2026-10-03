@@ -1,32 +1,113 @@
-# MultiLoader Template
+# Sverve
 
-This project provides a Gradle project template that can compile Minecraft mods for multiple modloaders using a common project for the sources. This project does not require any third party libraries or dependencies. If you have any questions or want to discuss the project, please join our [Discord](https://discord.myceliummod.network).
+Sverve makes Minecraft 26.3 survival harder through heat, cold, wetness, dry air, and thirst.
+It targets Fabric and NeoForge, uses Java 25 and Lombok, and manages configuration with Easy Config.
 
-## Getting Started
+The current foundation includes independent survival simulations, bounded immutable player state,
+an Easy Config schema, and persistent per-player thirst, body temperature, and wetness on both loaders. Thirst drains
+during active
+Survival/Adventure play, and finishing a plain water bottle restores hydration. Thirst survives reconnects,
+server restarts, and dimension changes, and resets on death respawn. Creative and Spectator players
+are excluded from gameplay updates while retaining their saved thirst.
 
-### IntelliJ IDEA
-This guide will show how to import the MultiLoader Template into IntelliJ IDEA. The setup process is roughly equivalent to setting up the modloaders independently and should be very familiar to anyone who has worked with their MDKs.
+The server synchronizes each player's thirst to a ten-icon bar above hunger. It currently reuses
+Sverve's custom full/half water sprites and moves above air/mount rows when needed. Creative,
+Spectator, F1, and the server's thirst enable switch hide it. At zero thirst, dehydration deals
+one heart every four seconds, bypasses armor, and can kill. Warm/Hot body exposure accelerates thirst loss.
 
-1. Clone or download this repository to your computer.
-2. Configure the project by setting the properties in the `gradle.properties` file. You will also need to change the `rootProject.name`  property in `settings.gradle`, this should match the folder name of your project, or else IDEA may complain.
-3. Open the template's root folder as a new project in IDEA. This is the folder that contains this README.md file and the gradlew executable.
-4. If your default JVM/JDK is not Java 25 you will encounter an error when opening the project. This error is fixed by going to `File > Settings > Build, Execution, Deployment > Build Tools > Gradle > Gradle JVM` and changing the value to a valid Java 25 JVM. You will also need to set the Project SDK to Java 25. This can be done by going to `File > Project Structure > Project SDK`. Once both have been set open the Gradle tab in IDEA and click the refresh button to reload the project.
-5. Open your Run/Debug Configurations. Under the `Application` category there should now be options to run NeoForge projects, and under the `Gradle` category there should now be options to run Fabric projects. Select one of the client options and try to run it.
-6. Assuming you were able to run the game in step 5 your workspace should now be set up.
+Body temperature gradually follows the current biome's declared base temperature, including
+datapack and modded biomes. Sampling runs once per second of eligible active play. Temperature
+survives reconnects, restarts, and dimension changes, and resets to comfortable on death.
+Its mapping and response rate are configurable. A server-selected Freezing, Cold, Normal, Warm,
+or Hot Steve head appears between health and hunger, with a small transition buffer to prevent flicker.
+The five 16x16 status textures render at 12x12 and can be replaced independently. Heat increases vanilla hunger
+exhaustion and thirst loss; cold slows food-based natural healing. Freezing/Hot add lethal periodic damage, reduced by
+stacking armor
+enchantments: Insulation, Heat Protection, and the weaker universal Thermal Protection, each I-IV.
 
-### Eclipse
-While it is possible to use this template in Eclipse it is not recommended. During the development of this template multiple critical bugs and quirks related to Eclipse were found at nearly every level of the required build tools. While we continue to work with these tools to report and resolve issues support for projects like these are not there yet. For now Eclipse is considered unsupported by this project. The development cycle for build tools is notoriously slow so there are no ETAs available.
+Water contact soaks players and exposed rain wets them gradually. Shelter and leaving water
+allow drying; hot biomes speed it up. Saved wetness cools body temperature and resets on death.
+Moisture and temperature settings pause independently. A tiny 7x7 droplet to the right of the hotbar fills
+as wetness increases and disappears when dry. Its independent placeholder textures can be replaced.
+See [the wetness guide](docs/moisture.md).
 
-## Development Guide
-When using this template the majority of your mod should be developed in the `common` project. The `common` project is compiled against the vanilla game and is used to hold code that is shared between the different loader-specific versions of your mod. The `common` project has no knowledge or access to ModLoader specific code, apis, or concepts. Code that requires something from a specific loader must be done through the project that is specific to that loader, such as the `fabric` or `neoforge` projects.
+See [the architecture guide](docs/architecture.md) for package responsibilities, feature interactions,
+coding conventions, and the implementation sequence. Balance values are provisional.
 
-Loader specific projects such as the `fabric` and `neoforge` project are used to load the `common` project into the game. These projects also define code that is specific to that loader. Loader specific projects can access all the code in the `common` project. It is important to remember that the `common` project can not access code from loader specific projects.
+## Build and verify
 
-## Removing Platforms and Loaders
-While this template has support for many modloaders, new loaders may appear in the future, and existing loaders may become less relevant.
+Use a Java 25 JDK to run Gradle:
 
-Removing loader specific projects is as easy as deleting the folder, and removing the `include('projectname')` line from the `settings.gradle` file.
-For example if you wanted to remove support for `forge` you would follow the following steps:
+```powershell
+.\gradlew.bat :common:test :fabric:build :neoforge:build
+.\gradlew.bat :fabric:runGametest
+.\gradlew.bat :fabric:runClientGametest
+.\gradlew.bat :neoforge:runHudCheck
+```
 
-1. Delete the subproject folder. For example, delete `MultiLoader-Template/forge`.
-2. Remove the project from `settings.gradle`. For example, remove `include('forge')`. 
+Loader jars are written to `fabric/build/libs` and `neoforge/build/libs`.
+Install the matching Easy Config mod on both sides, plus Fabric API on Fabric.
+Lombok is a compile-time dependency and is not bundled into the mod.
+Common compiles against Easy Config's standalone API; the loader artifacts supply it at runtime.
+The Fabric GameTest run exercises real server players, bottle consumption, and the completion
+mixin, biome temperature sampling, and native temperature saving/loading. The client GameTest verifies real packet
+delivery, drinking updates, visibility, and captures
+HUD screenshots under `fabric/build/client-gametest/screenshots`. The test mod stays out of release jars.
+The NeoForge HUD check copies that generated world into `neoforge/build/hud-check`, tests real
+drinking, packets, HUD rows, lethal dehydration, death respawn, and Nether transfer, and writes `result.txt` plus
+screenshots there. It also checks native temperature updates, death reset, dimension preservation,
+stacked dedicated/universal armor protection, natural healing, hunger/thirst drain, lethal overheating,
+and native water/rain soaking, shelter, drying, wet cooling, and wetness HUD snapshots.
+Run the Fabric client GameTest first to generate its fixture. Both test mods
+are excluded from ordinary development runs and release jars.
+
+## Configuration
+
+Initialization creates `config/sverve-survival-server.toml`, with `temperature`, `moisture`, and
+`thirst` sections. Easy Config writes comments and numeric bounds; serialized field names are lowercase.
+Each feature has its own enable switch. Server configuration determines gameplay; the client HUD
+displays received server snapshots. `Side.SERVER` identifies the file's purpose and suffix;
+this foundation does not provide remote server editing or full config synchronization.
+
+Thirst defaults to a full-to-empty time of 20 minutes at rest or 10 minutes while continuously
+sprinting, measured in game ticks. A plain water bottle restores 30%, capped at full hydration.
+The `thirst` settings `baseloss`, `sprintloss`, and `waterbottlehydration` control these values;
+`enabled` pauses both drain and restoration and hides the bar on connected clients. Existing
+configuration files retain their saved values.
+
+The `thirst` settings `dehydrationdamage` (health points; 2 is one heart) and
+`dehydrationintervalseconds` configure zero-thirst damage. Disabling thirst or setting damage to
+zero pauses its timer. Drinking resets the timer when hydration rises above zero. Damage can
+kill on any difficulty; Creative, Spectator, and dead players are exempt.
+
+The `temperature` section's `comfortablebiometemperature` defaults to 0.8 (plains),
+`coldbiomerange` to 0.8, and `hotbiomerange` to 1.2. These map snowy plains (0.0) to full cold
+exposure and deserts (2.0) to full heat exposure. `responserate` controls gradual change;
+`enabled` freezes saved temperature and hides its icon. See [the temperature guide](docs/temperature.md)
+for display thresholds and custom texture paths.
+
+Temperature damage defaults to one heart every four seconds before protection. Equipped levels
+add across helmet, chestplate, leggings, and boots: 16 dedicated levels prevent the corresponding
+damage; 16 Thermal Protection levels halve both kinds. The three are mutually exclusive per piece
+and compatible with vanilla Protection. They use vanilla enchanting, books, trades, and random loot.
+Protection applies to extreme damage; it does not alter body exposure or metabolic penalties.
+Warm/Hot multiply baseline plus sprinting thirst loss by 1.5/2 and add 0.1/0.2 vanilla food exhaustion
+per second. Cold/Freezing make natural healing intervals 1.5/2 times longer, preserving healing
+amounts and hunger costs. These values are configurable in the `temperature` section.
+
+## Development
+
+Open this directory as a Gradle project and set both the project SDK and Gradle JVM to Java 25.
+
+```powershell
+.\gradlew.bat :fabric:runClient
+.\gradlew.bat :neoforge:runClient
+```
+
+Shared gameplay belongs in `common`; native loader hooks belong in `fabric` and `neoforge`.
+Feature state, settings, and calculations live together under `survival/<feature>`.
+The original build layout comes from the MultiLoader Template.
+
+## License
+
+[LGPL v3](LICENSE.md).
