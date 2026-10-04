@@ -5,14 +5,16 @@ import com.iso2t.sverve.client.SurvivalHudVisibility;
 import com.iso2t.sverve.survival.temperature.TemperatureBand;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.PlayerFaceExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 
 import java.util.Locale;
 
 /**
- * Each 16x16 status head is rendered at the smaller HUD size; animated sprites use the same path.
+ * The player's live skin with a temperature overlay for non-normal bands.
  */
 @RequiredArgsConstructor
 public final class TemperatureHud {
@@ -27,10 +29,17 @@ public final class TemperatureHud {
 
 	public void extract (GuiGraphicsExtractor graphics) {
 		if (!isVisible()) return;
-		graphics.blitSprite(RenderPipelines.GUI_TEXTURED, sprite(state.getSnapshot().getBand()), TemperatureIconLayout.iconX(graphics.guiWidth()), TemperatureIconLayout.iconY(graphics.guiHeight()), TemperatureIconLayout.ICON_SIZE, TemperatureIconLayout.ICON_SIZE);
+		int x = TemperatureIconLayout.iconX(graphics.guiWidth());
+		int y = TemperatureIconLayout.iconY(graphics.guiHeight());
+		int size = TemperatureIconLayout.ICON_SIZE;
+		var band = state.getSnapshot().getBand();
+		PlayerFaceExtractor.extractRenderState(graphics, Minecraft.getInstance().player.getSkin(), x, y, size);
+		if (band != TemperatureBand.NORMAL) {
+			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, overlaySprite(band), x, y, size, size);
+		}
 	}
 
-	public static Identifier sprite (TemperatureBand band) {
-		return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "hud/temperature/" + band.name().toLowerCase(Locale.ROOT));
+	private static Identifier overlaySprite (TemperatureBand band) {
+		return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "hud/temperature/" + band.name().toLowerCase(Locale.ROOT) + "_overlay");
 	}
 }

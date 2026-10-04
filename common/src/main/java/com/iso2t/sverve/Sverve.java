@@ -12,6 +12,7 @@ import com.iso2t.sverve.network.thirst.ThirstSyncTransport;
 import com.iso2t.sverve.network.thirst.ThirstSynchronizer;
 import com.iso2t.sverve.platform.Services;
 import com.iso2t.sverve.player.environment.BiomeEnvironmentSampler;
+import com.iso2t.sverve.player.environment.NearbyHeatSampler;
 import com.iso2t.sverve.player.moisture.MoistureGameplay;
 import com.iso2t.sverve.player.moisture.MoistureStorage;
 import com.iso2t.sverve.player.moisture.PlayerMoisture;
@@ -45,7 +46,8 @@ public class Sverve {
 		var moistureGameplay = new MoistureGameplay(playerMoisture, moistureStorage, config.getMoisture(), new MoistureSystem(config.getMoisture()), moistureSynchronizer);
 		var metabolism = new TemperatureMetabolism(playerTemperature, new TemperatureMetabolismSystem(config.getTemperature()));
 		var temperatureSynchronizer = new TemperatureSynchronizer(playerTemperature, config.getTemperature(), temperatureTransport);
-		var temperatureGameplay = new TemperatureGameplay(playerTemperature, temperatureStorage, config.getTemperature(), new TemperatureSystem(config.getTemperature()), new BiomeEnvironmentSampler(new BiomeTemperatureMapping(config.getTemperature())), temperatureSynchronizer, new TemperaturePenalties(temperatureStorage, config.getTemperature()), metabolism, moistureGameplay);
+		var environment = new BiomeEnvironmentSampler(new BiomeTemperatureMapping(config.getTemperature()), new NearbyHeatSampler(config.getHeatSources()));
+		var temperatureGameplay = new TemperatureGameplay(playerTemperature, temperatureStorage, config.getTemperature(), new TemperatureSystem(config.getTemperature()), environment, temperatureSynchronizer, new TemperaturePenalties(temperatureStorage, config.getTemperature()), metabolism, moistureGameplay);
 		return new SverveRuntime(config, SurvivalEngine.create(config), playerThirst, new ThirstGameplay(playerThirst, new ThirstSystem(config.getThirst()), synchronizer, new ThirstPenalties(storage, config.getThirst()), metabolism), synchronizer, playerTemperature, temperatureGameplay, temperatureSynchronizer, metabolism, playerMoisture, moistureGameplay, moistureSynchronizer);
 	}
 }

@@ -6,7 +6,8 @@ It targets Fabric and NeoForge, uses Java 25 and Lombok, and manages configurati
 The current foundation includes independent survival simulations, bounded immutable player state,
 an Easy Config schema, and persistent per-player thirst, body temperature, and wetness on both loaders. Thirst drains
 during active
-Survival/Adventure play, and finishing a plain water bottle restores hydration. Thirst survives reconnects,
+Survival/Adventure play, and finishing a plain water bottle restores hydration. Plain water bottles stack to 16.
+Thirst survives reconnects,
 server restarts, and dimension changes, and resets on death respawn. Creative and Spectator players
 are excluded from gameplay updates while retaining their saved thirst.
 
@@ -18,16 +19,21 @@ one heart every four seconds, bypasses armor, and can kill. Warm/Hot body exposu
 Body temperature gradually follows the current biome's declared base temperature, including
 datapack and modded biomes. Sampling runs once per second of eligible active play. Temperature
 survives reconnects, restarts, and dimension changes, and resets to comfortable on death.
-Its mapping and response rate are configurable. A server-selected Freezing, Cold, Normal, Warm,
-or Hot Steve head appears between health and hunger, with a small transition buffer to prevent flicker.
-The five 16x16 status textures render at 12x12 and can be replaced independently. Heat increases vanilla hunger
+Its mapping and response rate are configurable. The player's skin face appears between health and hunger,
+with a server-selected Freezing, Cold, Warm, or Hot overlay and a small transition buffer to prevent flicker.
+Normal shows the face alone. The four 16x16 overlays can be replaced independently. Heat increases vanilla hunger
 exhaustion and thirst loss; cold slows food-based natural healing. Freezing/Hot add lethal periodic damage, reduced by
 stacking armor
 enchantments: Insulation, Heat Protection, and the weaker universal Thermal Protection, each I-IV.
 
 Water contact soaks players and exposed rain wets them gradually. Shelter and leaving water
 allow drying; hot biomes speed it up. Saved wetness cools body temperature and resets on death.
-Moisture and temperature settings pause independently. A tiny 7x7 droplet to the right of the hotbar fills
+Nearby lit campfires, placed torches, and lava warm players and speed up drying. Campfires reach four blocks;
+torches provide mild warmth within two blocks, and source/flowing lava supplies stronger warmth within six.
+Warmth fades with distance, walls block it, and only
+the strongest source applies. Soul variants count too. The `heatsources` config controls this behavior,
+and block tags allow datapacks to include compatible modded sources. Fluids in Minecraft's lava tag also count.
+Moisture and temperature settings pause independently. A tiny droplet overlaps the upper-right edge of the face and fills
 as wetness increases and disappears when dry. Its independent placeholder textures can be replaced.
 See [the wetness guide](docs/moisture.md).
 

@@ -5,6 +5,7 @@ import com.iso2t.sverve.network.moisture.MoistureSyncTracker;
 import com.iso2t.sverve.network.moisture.MoistureSyncTransport;
 import com.iso2t.sverve.network.moisture.MoistureSynchronizer;
 import com.iso2t.sverve.player.environment.BiomeEnvironmentSampler;
+import com.iso2t.sverve.player.environment.NearbyHeatSampler;
 import com.iso2t.sverve.survival.moisture.MoistureState;
 import com.iso2t.sverve.survival.temperature.BiomeTemperatureMapping;
 import com.iso2t.sverve.survival.temperature.TemperatureState;
@@ -292,7 +293,7 @@ public final class MoistureGameTests {
 	}
 
 	private static BiomeEnvironmentSampler sampler () {
-		return new BiomeEnvironmentSampler(new BiomeTemperatureMapping(runtime().getConfig().getTemperature()));
+		return new BiomeEnvironmentSampler(new BiomeTemperatureMapping(runtime().getConfig().getTemperature()), new NearbyHeatSampler(runtime().getConfig().getHeatSources()));
 	}
 
 	private static ServerPlayer join (GameTestHelper helper) {

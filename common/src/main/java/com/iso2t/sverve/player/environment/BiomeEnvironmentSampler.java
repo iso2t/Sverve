@@ -13,10 +13,12 @@ import net.minecraft.server.level.ServerPlayer;
 public final class BiomeEnvironmentSampler {
 	@NonNull
 	private final BiomeTemperatureMapping temperatures;
+	@NonNull
+	private final NearbyHeatSampler heat;
 
 	public EnvironmentSample sample (@NonNull ServerPlayer player) {
 		var biome = player.level().getBiome(player.blockPosition()).value();
 		// Vanilla's rain check respects roofs, rainless biomes, and snow precipitation.
-		return EnvironmentSample.builder().ambientTemperature(temperatures.map(biome.getBaseTemperature())).humidity(0.5).exposedToRain(player.level().isRainingAt(player.blockPosition())).immersed(player.isInWater()).sprinting(player.isSprinting()).build();
+		return EnvironmentSample.builder().ambientTemperature(temperatures.map(biome.getBaseTemperature())).nearbyHeat(heat.sample(player)).humidity(0.5).exposedToRain(player.level().isRainingAt(player.blockPosition())).immersed(player.isInWater()).sprinting(player.isSprinting()).build();
 	}
 }

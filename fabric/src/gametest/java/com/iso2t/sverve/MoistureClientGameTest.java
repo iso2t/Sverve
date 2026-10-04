@@ -3,6 +3,7 @@ package com.iso2t.sverve;
 import com.iso2t.sverve.client.SverveFabricClient;
 import com.iso2t.sverve.client.moisture.ClientMoistureState;
 import com.iso2t.sverve.client.moisture.MoistureHud;
+import com.iso2t.sverve.client.temperature.TemperatureHud;
 import com.iso2t.sverve.survival.moisture.MoistureState;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.ModInitializer;
@@ -27,6 +28,7 @@ public final class MoistureClientGameTest implements FabricClientGameTest {
 	public void runTest (ClientGameTestContext context) {
 		var state = clientState();
 		var hud = new MoistureHud(state);
+		var temperatureHud = new TemperatureHud(client().getTemperature());
 		var config = runtime().getConfig().getMoisture();
 		double drying = config.getDryingRate().get();
 		double heatDrying = config.getHeatDryingRate().get();
@@ -96,10 +98,17 @@ public final class MoistureClientGameTest implements FabricClientGameTest {
 				require(!hud.isVisible(), "Dead players must hide the wetness icon");
 				player.setHealth(health);
 			});
-			world.getServer().runOnServer(server -> connection.getServerPlayer().teleportTo(server.getLevel(Level.NETHER), 0.5, 80, 0.5, Set.of(), 0, 0, true));
+			world.getServer().runOnServer(server -> {
+				runtime().getConfig().getTemperature().getEnabled().set(true);
+				connection.getServerPlayer().teleportTo(server.getLevel(Level.NETHER), 0.5, 80, 0.5, Set.of(), 0, 0, true);
+			});
 			context.waitFor(client -> client.level.dimension() == Level.NETHER && state.getSnapshot().getFillUnits() == 7);
 			connection.waitForChunksRender();
-			context.runOnClient(client -> require(hud.isVisible(), "Dimension refresh must preserve the wetness display"));
+			context.waitFor(client -> temperatureHud.isVisible());
+			context.runOnClient(client -> {
+				require(hud.isVisible(), "Dimension refresh must preserve the wetness display");
+				require(temperatureHud.isVisible(), "Nether must display temperature when enabled");
+			});
 			context.takeScreenshot("moisture-nether");
 			world.getServer().runOnServer(server -> runtime().getPlayerMoisture().update(connection.getServerPlayer(), ignored -> MoistureState.dry()));
 			context.waitFor(client -> state.getSnapshot().getFillUnits() == 0);
@@ -118,7 +127,11 @@ public final class MoistureClientGameTest implements FabricClientGameTest {
 	}
 
 	private static ClientMoistureState clientState () {
-		return FabricLoader.getInstance().getEntrypoints("client", ClientModInitializer.class).stream().filter(SverveFabricClient.class::isInstance).map(SverveFabricClient.class::cast).findFirst().orElseThrow().getMoisture();
+		return client().getMoisture();
+	}
+
+	private static SverveFabricClient client () {
+		return FabricLoader.getInstance().getEntrypoints("client", ClientModInitializer.class).stream().filter(SverveFabricClient.class::isInstance).map(SverveFabricClient.class::cast).findFirst().orElseThrow();
 	}
 
 	private static void require (boolean condition, String message) {

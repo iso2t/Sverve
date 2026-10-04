@@ -15,7 +15,7 @@ public final class TemperatureSystem {
 		SurvivalMath.requireRange(seconds, 0.0, Double.MAX_VALUE, "seconds");
 		if (!config.getEnabled().get() || seconds == 0.0) return state;
 
-		double target = SurvivalMath.clamp(environment.getAmbientTemperature() - wetness * config.getWetCooling().get(), -1.0, 1.0);
+		double target = SurvivalMath.clamp(environment.getAmbientTemperature() + environment.getNearbyHeat() - wetness * config.getWetCooling().get(), -1.0, 1.0);
 		// Exponential relaxation approaches the target without overshooting on long updates.
 		double response = -Math.expm1(-config.getResponseRate().get() * seconds);
 		double exposure = state.getExposure() + (target - state.getExposure()) * response;

@@ -13,6 +13,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
+
+import java.util.List;
+import java.util.Set;
 
 /**
  * Exercises owner packets, every status head, and center placement through a real client HUD.
@@ -38,6 +42,32 @@ public final class TemperatureClientGameTest implements FabricClientGameTest {
 				});
 				connection.waitForChunksRender();
 				context.takeScreenshot("temperature-" + band.name().toLowerCase(java.util.Locale.ROOT));
+			}
+
+			double responseRate = runtime().getConfig().getTemperature().getResponseRate().get();
+			try {
+				world.getServer().runOnServer(server -> {
+					runtime().getConfig().getTemperature().getResponseRate().set(0.0);
+					connection.getServerPlayer().setPermanentlyInvulnerable(true);
+					connection.getServerPlayer().setNoGravity(true);
+				});
+				for (var dimension : List.of(Level.NETHER, Level.END, Level.OVERWORLD)) {
+					world.getServer().runOnServer(server -> {
+						var player = connection.getServerPlayer();
+						runtime().getPlayerTemperature().update(player, ignored -> TemperatureState.comfortable());
+						player.teleportTo(server.getLevel(dimension), 0.5, 80, 0.5, Set.of(), 0, 0, true);
+					});
+					context.waitFor(client -> client.level.dimension() == dimension
+							&& state.getSnapshot().getBand() == TemperatureBand.NORMAL && hud.isVisible());
+					connection.waitForChunksRender();
+					context.takeScreenshot("temperature-" + dimension.identifier().getPath() + "-player-face");
+					world.getServer().runOnServer(server -> runtime().getPlayerTemperature().update(
+							connection.getServerPlayer(), ignored -> new TemperatureState(1)));
+					context.waitFor(client -> state.getSnapshot().getBand() == TemperatureBand.HOT && hud.isVisible());
+					context.takeScreenshot("temperature-" + dimension.identifier().getPath() + "-hot");
+				}
+			} finally {
+				runtime().getConfig().getTemperature().getResponseRate().set(responseRate);
 			}
 
 			world.getServer().runOnServer(server -> {

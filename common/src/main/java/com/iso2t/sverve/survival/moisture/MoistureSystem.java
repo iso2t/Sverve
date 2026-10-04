@@ -24,7 +24,7 @@ public final class MoistureSystem {
 	}
 
 	private double dryingRate (EnvironmentSample environment) {
-		double heat = Math.max(0.0, environment.getAmbientTemperature());
+		double heat = Math.max(0.0, environment.getAmbientTemperature()) + environment.getNearbyHeat();
 		double dryAir = 1.0 - environment.getHumidity();
 		return (config.getDryingRate().get() + heat * config.getHeatDryingRate().get()) * dryAir;
 	}

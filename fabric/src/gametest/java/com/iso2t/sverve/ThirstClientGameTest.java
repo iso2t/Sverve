@@ -39,14 +39,17 @@ public final class ThirstClientGameTest implements FabricClientGameTest {
 
 			world.getServer().runOnServer(server -> {
 				var player = connection.getServerPlayer();
-				player.setItemInHand(InteractionHand.MAIN_HAND, Items.POTION.getDefaultInstance());
+				player.setItemInHand(InteractionHand.MAIN_HAND, Items.POTION.getDefaultInstance().copyWithCount(16));
 				player.startUsingItem(InteractionHand.MAIN_HAND);
 			});
 			context.waitTicks(35);
 			connection.waitForClientboundPackets();
 			context.runOnClient(client -> {
 				require(clientState.getSnapshot().getHalfUnits() == 15, "Completed drinking must update the client from 9 to 15 half icons");
-				require(client.player.getMainHandItem().is(Items.GLASS_BOTTLE), "Drinking must keep vanilla's glass bottle remainder");
+				require(client.player.getMainHandItem().is(Items.POTION) && client.player.getMainHandItem().getCount() == 15,
+						"Drinking must synchronize the remaining fifteen water bottles");
+				require(client.player.getMainHandItem().getMaxStackSize() == 16, "The client must also use a stack limit of sixteen");
+				require(client.player.getInventory().countItem(Items.GLASS_BOTTLE) == 1, "Drinking must keep vanilla's glass bottle remainder");
 			});
 			context.takeScreenshot("thirst-after-drinking");
 

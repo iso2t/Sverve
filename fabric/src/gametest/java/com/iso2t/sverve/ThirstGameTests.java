@@ -36,6 +36,51 @@ import java.util.Map;
  */
 public class ThirstGameTests {
 	@GameTest
+	public void onlyDrinkableWaterStacksToSixteen (GameTestHelper helper) {
+		ItemStack water = Items.POTION.getDefaultInstance();
+		helper.assertTrue(water.getMaxStackSize() == 16 && water.isStackable(), "Existing plain water must stack to sixteen");
+		water.set(DataComponents.POTION_CONTENTS, new PotionContents(Potions.AWKWARD));
+		helper.assertTrue(water.getMaxStackSize() == 1, "Brewing must restore the vanilla potion limit");
+		water.set(DataComponents.POTION_CONTENTS, new PotionContents(Potions.WATER));
+		helper.assertTrue(water.getMaxStackSize() == 16, "Changing contents back to water must restore stacking");
+		helper.assertTrue(Items.SPLASH_POTION.getDefaultInstance().getMaxStackSize() == 1, "Splash water must remain unstackable");
+		helper.assertTrue(Items.LINGERING_POTION.getDefaultInstance().getMaxStackSize() == 1, "Lingering water must remain unstackable");
+		helper.succeed();
+	}
+
+	@GameTest
+	public void inventoryMergesWaterAndSplitsAtSixteen (GameTestHelper helper) {
+		ServerPlayer player = join(helper, GameType.SURVIVAL);
+		try {
+			player.getInventory().clearContent();
+			player.getInventory().add(Items.POTION.getDefaultInstance().copyWithCount(12));
+			player.getInventory().add(Items.POTION.getDefaultInstance().copyWithCount(8));
+			helper.assertTrue(player.getInventory().getItem(0).getCount() == 16, "Inventory must merge water up to sixteen");
+			helper.assertTrue(player.getInventory().getItem(1).getCount() == 4, "Excess water must start another stack");
+		} finally {
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void drinkingFromAStackConsumesOneAndReturnsOneEmptyBottle (GameTestHelper helper) {
+		ServerPlayer player = join(helper, GameType.SURVIVAL);
+		try {
+			player.getInventory().clearContent();
+			seed(player, 0.2);
+			drink(player, Items.POTION.getDefaultInstance().copyWithCount(16), 32);
+			near(helper, thirst().get(player).getHydration(), 0.5);
+			helper.assertTrue(ThirstGameplay.isPlainWaterBottle(player.getMainHandItem()) && player.getMainHandItem().getCount() == 15,
+					"Drinking must leave fifteen water bottles in hand");
+			helper.assertTrue(player.getInventory().countItem(Items.GLASS_BOTTLE) == 1, "Drinking must return exactly one empty bottle");
+		} finally {
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
 	public void completedWaterBottleRestoresHydrationAndReturnsAnEmptyBottle (GameTestHelper helper) {
 		ServerPlayer player = join(helper, GameType.SURVIVAL);
 		try {
@@ -54,11 +99,12 @@ public class ThirstGameTests {
 		ServerPlayer player = join(helper, GameType.SURVIVAL);
 		try {
 			seed(player, 0.2);
-			drink(player, Items.POTION.getDefaultInstance(), 10);
+			drink(player, Items.POTION.getDefaultInstance().copyWithCount(16), 10);
 			player.releaseUsingItem();
 			for (int i = 0; i < 40; i++) player.doTick();
 			near(helper, thirst().get(player).getHydration(), 0.2);
 			helper.assertTrue(ThirstGameplay.isPlainWaterBottle(player.getMainHandItem()), "Canceled use must leave the water bottle");
+			helper.assertTrue(player.getMainHandItem().getCount() == 16, "Canceled use must preserve the entire stack");
 		} finally {
 			leave(player);
 		}

@@ -4,7 +4,8 @@
   "package": "com.iso2t.sverve.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "FoodDataMixin"
+    "FoodDataMixin",
+    "ItemInstanceMixin"
   ],
   "client": [],
   "server": [],

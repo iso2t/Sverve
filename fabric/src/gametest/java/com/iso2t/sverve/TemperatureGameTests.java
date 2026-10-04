@@ -5,6 +5,7 @@ import com.iso2t.sverve.network.temperature.TemperatureSyncTracker;
 import com.iso2t.sverve.network.temperature.TemperatureSyncTransport;
 import com.iso2t.sverve.network.temperature.TemperatureSynchronizer;
 import com.iso2t.sverve.player.environment.BiomeEnvironmentSampler;
+import com.iso2t.sverve.player.environment.NearbyHeatSampler;
 import com.iso2t.sverve.survival.temperature.BiomeTemperatureMapping;
 import com.iso2t.sverve.survival.temperature.TemperatureBand;
 import com.iso2t.sverve.survival.temperature.TemperatureState;
@@ -129,7 +130,7 @@ public final class TemperatureGameTests {
 		try {
 			near(helper, exposure(player), 0);
 			biome(helper, player, "sverve_test:hot_test");
-			var sampler = new BiomeEnvironmentSampler(new BiomeTemperatureMapping(runtime().getConfig().getTemperature()));
+			var sampler = new BiomeEnvironmentSampler(new BiomeTemperatureMapping(runtime().getConfig().getTemperature()), new NearbyHeatSampler(runtime().getConfig().getHeatSources()));
 			near(helper, sampler.sample(player).getAmbientTemperature(), 1);
 			ticks(helper, 19);
 			near(helper, exposure(player), 0);

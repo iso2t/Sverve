@@ -14,6 +14,10 @@ public class EnvironmentSample {
 	 */
 	double  ambientTemperature;
 	/**
+	 * Additional warmth from the strongest nearby visible heat source, from 0 to 1.
+	 */
+	double  nearbyHeat;
+	/**
 	 * Relative humidity: 0 dry air, 1 saturated air.
 	 */
 	double  humidity;
@@ -22,8 +26,9 @@ public class EnvironmentSample {
 	boolean sprinting;
 
 	@Builder
-	public EnvironmentSample (double ambientTemperature, double humidity, boolean exposedToRain, boolean immersed, boolean sprinting) {
+	public EnvironmentSample (double ambientTemperature, double nearbyHeat, double humidity, boolean exposedToRain, boolean immersed, boolean sprinting) {
 		this.ambientTemperature = SurvivalMath.requireRange(ambientTemperature, -1.0, 1.0, "ambientTemperature");
+		this.nearbyHeat = SurvivalMath.requireRange(nearbyHeat, 0.0, 1.0, "nearbyHeat");
 		this.humidity = SurvivalMath.requireRange(humidity, 0.0, 1.0, "humidity");
 		this.exposedToRain = exposedToRain;
 		this.immersed = immersed;
@@ -31,6 +36,6 @@ public class EnvironmentSample {
 	}
 
 	public static EnvironmentSample temperate () {
-		return new EnvironmentSample(0.0, 0.5, false, false, false);
+		return EnvironmentSample.builder().humidity(0.5).build();
 	}
 }

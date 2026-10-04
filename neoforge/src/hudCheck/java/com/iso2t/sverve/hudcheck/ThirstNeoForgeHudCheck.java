@@ -106,7 +106,7 @@ public final class ThirstNeoForgeHudCheck {
 			}
 			if (client.gui.screen() != null || elapsedMillis < 350) return;
 			if ((stage == 20 || stage == 22 || stage == 24) && elapsedMillis < 4500) return;
-			if ((stage == 29 || stage == 31 || stage == 33) && elapsedMillis < 1500) return;
+			if ((stage == 29 || stage == 31 || stage == 33 || stage == 36 || stage == 37) && elapsedMillis < 1500) return;
 			int height = client.gui.hud.rightHeight;
 			switch (stage) {
 				case 0 -> {
@@ -133,21 +133,30 @@ public final class ThirstNeoForgeHudCheck {
 					// A normal client cancels server-started use unless its use key stays held.
 					client.options.keyUse.setDown(true);
 					onServer(client, player -> {
-						player.setItemInHand(InteractionHand.MAIN_HAND, Items.POTION.getDefaultInstance());
+						player.getInventory().clearContent();
+						var water = Items.POTION.getDefaultInstance().copyWithCount(16);
+						require(water.getMaxStackSize() == 16, "NeoForge water bottles must stack to sixteen");
+						player.setItemInHand(InteractionHand.MAIN_HAND, water);
 						player.startUsingItem(InteractionHand.MAIN_HAND);
 					});
 					next(3);
 				}
 				case 3 -> {
-					if (!client.player.getMainHandItem().is(Items.GLASS_BOTTLE)) return;
+					if (!client.player.getMainHandItem().is(Items.POTION) || client.player.getMainHandItem().getCount() != 15) return;
 					client.options.keyUse.setDown(false);
+					// The locally consumed stack can appear before the server's remainder slot update.
+					if (client.player.getInventory().countItem(Items.GLASS_BOTTLE) == 0) return;
 					require(height == 59, "Drinking must retain the thirst row and vanilla glass bottle");
+					require(client.player.getMainHandItem().getMaxStackSize() == 16, "NeoForge's client must use a stack limit of sixteen");
+					require(client.player.getInventory().countItem(Items.GLASS_BOTTLE) == 1, "Drinking a stack must return one empty bottle");
 					capture(client, "02-after-drinking");
 					next(4);
 				}
 				case 4 -> {
 					onServer(client, player -> {
 						require(player.getData(thirstType()).getHydration() > 0.70, "Completed water drinking must restore hydration through the NeoForge event");
+						require(player.getMainHandItem().getCount() == 15 && player.getInventory().countItem(Items.GLASS_BOTTLE) == 1,
+								"NeoForge's server must consume one water bottle and return one empty bottle");
 						player.setAirSupply(150);
 						player.setData(temperatureType(), new TemperatureState(1));
 					});
@@ -331,6 +340,43 @@ public final class ThirstNeoForgeHudCheck {
 				}
 				case 34 -> {
 					capture(client, "15-moisture-dry");
+					next(35);
+				}
+				case 35 -> {
+					onServer(client, player -> {
+						NearbyHeatNeoForgeCheck.prepare(player);
+						player.setData(temperatureType(), TemperatureState.comfortable());
+						player.setData(moistureType(), new MoistureState(0.8));
+					});
+					next(36);
+				}
+				case 36 -> {
+					onServer(client, player -> {
+						try {
+							require(player.getData(temperatureType()).getExposure() > 0, "Native campfire warmth must offset wet cooling");
+							require(player.getData(moistureType()).getWetness() < 0.795, "Campfires must speed up native drying");
+						} finally {
+							player.level().setBlock(player.blockPosition().east(2), Blocks.AIR.defaultBlockState(), 3);
+							player.setData(moistureType(), MoistureState.dry());
+						}
+						player.level().setBlock(player.blockPosition().east(2), Blocks.LAVA.defaultBlockState(), 3);
+						player.setData(temperatureType(), TemperatureState.comfortable());
+						player.setData(moistureType(), new MoistureState(0.8));
+					});
+					checks.add("nearby-campfire-and-torch-warmth");
+					next(37);
+				}
+				case 37 -> {
+					onServer(client, player -> {
+						try {
+							require(player.getData(temperatureType()).getExposure() > 0, "Native lava warmth must offset wet cooling");
+							require(player.getData(moistureType()).getWetness() < 0.795, "Lava must speed up native drying");
+						} finally {
+							NearbyHeatNeoForgeCheck.clearLava(player);
+							player.setData(moistureType(), MoistureState.dry());
+						}
+					});
+					checks.add("nearby-lava-warmth");
 					next(19);
 				}
 				case 19 -> {

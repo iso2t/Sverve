@@ -1,16 +1,13 @@
 package com.iso2t.sverve.player.thirst;
 
 import com.iso2t.sverve.network.thirst.ThirstSynchronizer;
+import com.iso2t.sverve.item.WaterBottles;
 import com.iso2t.sverve.player.temperature.TemperatureMetabolism;
 import com.iso2t.sverve.survival.thirst.ThirstSystem;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.PotionContents;
-import net.minecraft.world.item.alchemy.Potions;
 
 /**
  * Server gameplay bridge. Native hooks supply ticks and completed item use, never inventory edits.
@@ -48,6 +45,6 @@ public final class ThirstGameplay {
 	}
 
 	public static boolean isPlainWaterBottle (ItemStack stack) {
-		return stack.is(Items.POTION) && stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).is(Potions.WATER);
+		return WaterBottles.isPlainWater(stack);
 	}
 }
