@@ -12,7 +12,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
 /**
- * Reads worn armor at the damage pulse; inventory and held items never contribute.
+ * Reads current worn armor for exposure and penalties; inventory and held items never contribute.
  */
 @UtilityClass
 public class TemperatureProtection {

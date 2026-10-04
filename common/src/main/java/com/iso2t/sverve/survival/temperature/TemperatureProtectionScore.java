@@ -8,6 +8,8 @@ import lombok.Value;
  */
 @Value
 public class TemperatureProtectionScore {
+	public static final TemperatureProtectionScore NONE = new TemperatureProtectionScore(0, 0);
+
 	double coldReduction;
 	double heatReduction;
 
@@ -22,5 +24,13 @@ public class TemperatureProtectionScore {
 		}
 		double universal = thermalProtection * 0.5;
 		return new TemperatureProtectionScore(Math.min(1, (insulation + universal) / 16), Math.min(1, (heatProtection + universal) / 16));
+	}
+
+	/**
+	 * Applies only the protection for the sign of the supplied temperature.
+	 */
+	public double insulate (double exposure) {
+		SurvivalMath.requireRange(exposure, -1, 1, "exposure");
+		return exposure * (1 - (exposure < 0 ? coldReduction : heatReduction));
 	}
 }

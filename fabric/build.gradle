@@ -22,7 +22,13 @@ dependencies {
 }
 
 sourceSets {
+    lifecycleCheck {
+        java.srcDir(project(':common').file('src/integrationTest/java'))
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
     gametest {
+        java.srcDir(project(':common').file('src/integrationTest/java'))
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
@@ -32,12 +38,23 @@ loom {
     mods {
         sverve { sourceSet sourceSets.main }
         sverve_test { sourceSet sourceSets.gametest }
+        sverve_lifecycle_check { sourceSet sourceSets.lifecycleCheck }
     }
     def aw = project(':common').file("src/main/resources/${mod_id}.accesswidener")
     if (aw.exists()) {
         accessWidenerPath.set(aw)
     }
     runs {
+        ['seed', 'verify'].each { phase ->
+            create("lifecycle${phase.capitalize()}") {
+                server()
+                sourceSet.set('lifecycleCheck')
+                vmArg "-Dsverve.check.phase=${phase}"
+                programArg 'nogui'
+                ideConfigGenerated(false)
+                runDir('build/lifecycle-check')
+            }
+        }
         clientGametest {
             client()
             sourceSet.set('gametest')
@@ -68,6 +85,8 @@ loom {
         }
     }
 }
+
+apply from: rootProject.file('gradle/lifecycle-check.gradle')
 
 // Implement mcgradleconventions loader attribute
 def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)

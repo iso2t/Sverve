@@ -11,7 +11,8 @@
       "com.iso2t.sverve.TemperatureGameTests",
       "com.iso2t.sverve.TemperaturePenaltyGameTests",
       "com.iso2t.sverve.MoistureGameTests",
-      "com.iso2t.sverve.NearbyHeatGameTests"
+      "com.iso2t.sverve.NearbyHeatGameTests",
+      "com.iso2t.sverve.ClimateGameTests"
     ],
     "fabric-client-gametest": [
       "com.iso2t.sverve.ThirstClientGameTest",

@@ -147,7 +147,7 @@ public final class MoistureGameTests {
 			helper.assertTrue(!sampler().sample(player).isImmersed(), "Leaving water must stop immersion");
 			double before = exposure(player);
 			ticks(helper, 20);
-			near(helper, wetness(player), 0.995);
+			near(helper, wetness(player), 0.993);
 			helper.assertTrue(exposure(player) < before, "Persisting wetness must keep cooling the body while drying");
 		} finally {
 			player.level().setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
@@ -172,7 +172,7 @@ public final class MoistureGameTests {
 			level.setBlock(roof, Blocks.STONE.defaultBlockState(), 3);
 			helper.assertTrue(!sampler().sample(player).isExposedToRain(), "A real roof must block rain exposure");
 			ticks(helper, 20);
-			near(helper, wetness(player), 0.045);
+			near(helper, wetness(player), 0.043);
 			level.setBlock(roof, Blocks.AIR.defaultBlockState(), 3);
 			biome(helper, player, "minecraft:desert");
 			helper.assertTrue(!sampler().sample(player).isExposedToRain(), "Rainless biomes must not wet players");
@@ -194,7 +194,7 @@ public final class MoistureGameTests {
 			biome(helper, wet, "sverve_test:hot_test");
 			seed(wet, 1);
 			ticks(helper, 20);
-			near(helper, wetness(wet), 0.985);
+			near(helper, wetness(wet), 0.979);
 			near(helper, wetness(dry), 0);
 			helper.assertTrue(exposure(wet) < exposure(dry), "Wet players in the same hot biome must warm more slowly");
 			seed(wet, 0.002);
@@ -220,30 +220,30 @@ public final class MoistureGameTests {
 			near(helper, wetness(player), 1);
 			temperature.getEnabled().set(true);
 			ticks(helper, 10);
-			near(helper, wetness(player), 0.995);
+			near(helper, wetness(player), 0.993);
 			near(helper, exposure(player), 0);
 			ticks(helper, 10);
 			helper.assertTrue(exposure(player) < 0, "Temperature must wait its own fresh interval before wet cooling");
 			moisture.getEnabled().set(false);
 			runtime().getPlayerTemperature().update(player, ignored -> TemperatureState.comfortable());
 			ticks(helper, 20);
-			near(helper, wetness(player), 0.995);
+			near(helper, wetness(player), 0.993);
 			near(helper, exposure(player), 0);
 			moisture.getEnabled().set(true);
 			ticks(helper, 19);
 			for (var mode : new GameType[] { GameType.CREATIVE, GameType.SPECTATOR }) {
 				player.setGameMode(mode);
 				ticks(helper, 100);
-				near(helper, wetness(player), 0.995);
+				near(helper, wetness(player), 0.993);
 			}
 			player.setGameMode(GameType.ADVENTURE);
 			ticks(helper, 19);
-			near(helper, wetness(player), 0.995);
+			near(helper, wetness(player), 0.993);
 			ticks(helper, 1);
-			near(helper, wetness(player), 0.99);
+			near(helper, wetness(player), 0.986);
 			player.setHealth(0);
 			ticks(helper, 100);
-			near(helper, wetness(player), 0.99);
+			near(helper, wetness(player), 0.986);
 		} finally {
 			moisture.getEnabled().set(true);
 			temperature.getEnabled().set(true);

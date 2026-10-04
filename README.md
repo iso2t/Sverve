@@ -33,7 +33,8 @@ torches provide mild warmth within two blocks, and source/flowing lava supplies 
 Warmth fades with distance, walls block it, and only
 the strongest source applies. Soul variants count too. The `heatsources` config controls this behavior,
 and block tags allow datapacks to include compatible modded sources. Fluids in Minecraft's lava tag also count.
-Moisture and temperature settings pause independently. A tiny droplet overlaps the upper-right edge of the face and fills
+Moisture and temperature settings pause independently. A tiny droplet overlaps the upper-right edge of the face and
+fills
 as wetness increases and disappears when dry. Its independent placeholder textures can be replaced.
 See [the wetness guide](docs/moisture.md).
 

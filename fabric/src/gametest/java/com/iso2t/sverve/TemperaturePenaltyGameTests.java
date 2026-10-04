@@ -13,6 +13,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
@@ -23,6 +24,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.tags.TagKey;
+import net.minecraft.util.ProblemReporter;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -36,6 +38,7 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.gamerules.GameRules;
+import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
@@ -179,10 +182,13 @@ public final class TemperaturePenaltyGameTests {
 		var player = join(helper);
 		var config = runtime().getConfig().getTemperature();
 		var rate = config.getResponseRate().get();
+		var thirstConfig = runtime().getConfig().getThirst();
+		var dryAirLoss = thirstConfig.getDryAirLoss().get();
 		try {
 			config.getResponseRate().set(0.0);
+			thirstConfig.getDryAirLoss().set(0.0);
 			seed(player, 1);
-			setArmor(player, TemperatureProtection.HEAT_PROTECTION, 4);
+			player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1000));
 			player.getFoodData().setFoodLevel(20);
 			player.getFoodData().setSaturation(0);
 			double hydration = runtime().getPlayerThirst().get(player).getHydration();
@@ -193,8 +199,8 @@ public final class TemperaturePenaltyGameTests {
 			}
 			health(helper, player, 20);
 			helper.assertTrue(player.getFoodData().getFoodLevel() == 19, "Heat must spend vanilla exhaustion and drain hunger");
-			near(helper, runtime().getPlayerThirst().get(player).getHydration(), hydration - 2 * 21.0 / 1200);
-			helper.assertTrue(player.getActiveEffects().isEmpty(), "Temperature must not apply status effects");
+			near(helper, runtime().getPlayerThirst().get(player).getHydration(), hydration - (thirstConfig.getBaseLoss().get() + thirstConfig.getHeatLoss().get()) * 21);
+			helper.assertTrue(player.getActiveEffects().size() == 1 && player.hasEffect(MobEffects.FIRE_RESISTANCE), "Temperature must preserve vanilla Fire Resistance without adding effects");
 			config.getMetabolismEnabled().set(false);
 			hydration = runtime().getPlayerThirst().get(player).getHydration();
 			runtime().getThirstGameplay().tick(player);
@@ -206,6 +212,83 @@ public final class TemperaturePenaltyGameTests {
 		} finally {
 			config.getMetabolismEnabled().set(true);
 			config.getResponseRate().set(rate);
+			thirstConfig.getDryAirLoss().set(dryAirLoss);
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void armorSwapsImmediatelyScaleMetabolismAndPreserveBaselineThirst (GameTestHelper helper) {
+		var player = join(helper);
+		var metabolism = runtime().getTemperatureMetabolism();
+		var thirstConfig = runtime().getConfig().getThirst();
+		double dryAirLoss = thirstConfig.getDryAirLoss().get();
+		try {
+			seed(player, 1);
+			setArmor(player, TemperatureProtection.THERMAL_PROTECTION, 4);
+			near(helper, metabolism.thirstHeat(player), 0.5);
+			resetFood(player);
+			for (int tick = 0; tick < 20; tick++) {
+				metabolism.tick(player, new TemperatureState(1));
+				player.getFoodData().tick(player);
+			}
+			helper.assertTrue(player.getFoodData().getFoodLevel() == 19, "Partial protection must retain some heat exhaustion");
+			setArmor(player, TemperatureProtection.HEAT_PROTECTION, 4);
+			near(helper, metabolism.thirstHeat(player), 0);
+			resetFood(player);
+			for (int tick = 0; tick < 20; tick++) {
+				metabolism.tick(player, new TemperatureState(1));
+				player.getFoodData().tick(player);
+			}
+			helper.assertTrue(player.getFoodData().getFoodLevel() == 20, "Full protection must remove heat exhaustion");
+			thirstConfig.getDryAirLoss().set(0.0);
+			runtime().getPlayerThirst().update(player, ignored -> new com.iso2t.sverve.survival.thirst.ThirstState(0.8));
+			player.setSprinting(true);
+			for (int tick = 0; tick < 20; tick++) runtime().getThirstGameplay().tick(player);
+			near(helper, runtime().getPlayerThirst().get(player).getHydration(), 0.8 - thirstConfig.getBaseLoss().get() - thirstConfig.getSprintLoss().get());
+			seed(player, -1);
+			helper.assertTrue(metabolism.healingInterval(player, 80) == 160, "Heat armor must not protect cold healing");
+			setArmor(player, TemperatureProtection.THERMAL_PROTECTION, 4);
+			helper.assertTrue(metabolism.healingInterval(player, 80) == 120 && metabolism.healingInterval(player, 10) == 15, "Universal protection must halve extra cold healing delay");
+			setArmor(player, TemperatureProtection.INSULATION, 4);
+			helper.assertTrue(metabolism.healingInterval(player, 80) == 80 && metabolism.healingInterval(player, 10) == 10, "Full cold protection must restore vanilla healing cadence");
+			seed(player, 1);
+			near(helper, metabolism.thirstHeat(player), 1);
+			clearArmor(player);
+			near(helper, metabolism.thirstHeat(player), 1);
+			helper.assertTrue(player.getActiveEffects().isEmpty(), "Protection must not create potion effects");
+		} finally {
+			thirstConfig.getDryAirLoss().set(dryAirLoss);
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void fireResistanceBlocksOnlyHeatDamageAndExpiryStartsFreshGraceTime (GameTestHelper helper) {
+		var player = join(helper);
+		try {
+			helper.assertTrue(TemperatureDamage.source(player, TemperatureBand.HOT).is(DamageTypeTags.IS_FIRE), "Overheating must use vanilla fire immunity");
+			helper.assertTrue(!TemperatureDamage.source(player, TemperatureBand.FREEZING).is(DamageTypeTags.IS_FIRE), "Freezing must remain independent of fire immunity");
+			seed(player, 1);
+			ticks(player, 79);
+			player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1000));
+			ticks(player, 81);
+			health(helper, player, 20);
+			near(helper, runtime().getTemperatureMetabolism().thirstHeat(player), 1);
+			player.removeEffect(MobEffects.FIRE_RESISTANCE);
+			ticks(player, 79);
+			health(helper, player, 20);
+			ticks(player, 1);
+			health(helper, player, 18);
+			player.damageCooldownTime = 0;
+			player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 1000));
+			seed(player, -1);
+			ticks(player, 80);
+			health(helper, player, 16);
+			helper.assertTrue(player.hasEffect(MobEffects.FIRE_RESISTANCE), "Temperature must preserve external effects");
+		} finally {
 			leave(player);
 		}
 		helper.succeed();
@@ -267,7 +350,7 @@ public final class TemperaturePenaltyGameTests {
 			for (var mode : new GameType[] { GameType.CREATIVE, GameType.SPECTATOR }) {
 				player.setGameMode(mode);
 				helper.assertTrue(runtime().getTemperatureMetabolism().healingInterval(player, 80) == 80, "Exempt modes must use the vanilla healing interval");
-				near(helper, runtime().getTemperatureMetabolism().thirstMultiplier(player), 1);
+				near(helper, runtime().getTemperatureMetabolism().thirstHeat(player), 0);
 			}
 			player.setGameMode(GameType.SURVIVAL);
 			config.getEnabled().set(false);
@@ -392,6 +475,15 @@ public final class TemperaturePenaltyGameTests {
 
 	private static void clearArmor (ServerPlayer player) {
 		for (var slot : ARMOR) player.setItemSlot(slot, ItemStack.EMPTY);
+	}
+
+	private static void resetFood (ServerPlayer player) {
+		var tag = new CompoundTag();
+		tag.putInt("foodLevel", 20);
+		tag.putFloat("foodSaturationLevel", 0);
+		tag.putFloat("foodExhaustionLevel", 3.95f);
+		tag.putInt("foodTickTimer", 0);
+		player.getFoodData().readAdditionalSaveData(TagValueInput.create(ProblemReporter.DISCARDING, player.registryAccess(), tag));
 	}
 
 	private static void seed (ServerPlayer player, double exposure) {

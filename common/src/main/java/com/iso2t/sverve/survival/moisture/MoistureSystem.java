@@ -25,7 +25,8 @@ public final class MoistureSystem {
 
 	private double dryingRate (EnvironmentSample environment) {
 		double heat = Math.max(0.0, environment.getAmbientTemperature()) + environment.getNearbyHeat();
-		double dryAir = 1.0 - environment.getHumidity();
-		return (config.getDryingRate().get() + heat * config.getHeatDryingRate().get()) * dryAir;
+		// Biome downfall describes climate, not saturated air: even the wettest biome permits drying.
+		double humidityFactor = 1.0 - 0.75 * environment.getHumidity();
+		return (config.getDryingRate().get() + heat * config.getHeatDryingRate().get()) * humidityFactor;
 	}
 }

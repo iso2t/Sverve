@@ -4,7 +4,7 @@ import com.iso2t.sverve.client.temperature.TemperatureIconLayout;
 import lombok.experimental.UtilityClass;
 
 /**
- * Small right-side indicators leave space for vanilla's offhand and attack indicator when needed.
+ * Anchors the moisture indicator to the lower right of the temperature head.
  */
 @UtilityClass
 public class HotbarIconLayout {

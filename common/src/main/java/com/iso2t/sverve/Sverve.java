@@ -48,6 +48,6 @@ public class Sverve {
 		var temperatureSynchronizer = new TemperatureSynchronizer(playerTemperature, config.getTemperature(), temperatureTransport);
 		var environment = new BiomeEnvironmentSampler(new BiomeTemperatureMapping(config.getTemperature()), new NearbyHeatSampler(config.getHeatSources()));
 		var temperatureGameplay = new TemperatureGameplay(playerTemperature, temperatureStorage, config.getTemperature(), new TemperatureSystem(config.getTemperature()), environment, temperatureSynchronizer, new TemperaturePenalties(temperatureStorage, config.getTemperature()), metabolism, moistureGameplay);
-		return new SverveRuntime(config, SurvivalEngine.create(config), playerThirst, new ThirstGameplay(playerThirst, new ThirstSystem(config.getThirst()), synchronizer, new ThirstPenalties(storage, config.getThirst()), metabolism), synchronizer, playerTemperature, temperatureGameplay, temperatureSynchronizer, metabolism, playerMoisture, moistureGameplay, moistureSynchronizer);
+		return new SverveRuntime(config, SurvivalEngine.create(config), playerThirst, new ThirstGameplay(playerThirst, new ThirstSystem(config.getThirst()), synchronizer, new ThirstPenalties(storage, config.getThirst()), metabolism, environment), synchronizer, playerTemperature, temperatureGameplay, temperatureSynchronizer, metabolism, playerMoisture, moistureGameplay, moistureSynchronizer);
 	}
 }

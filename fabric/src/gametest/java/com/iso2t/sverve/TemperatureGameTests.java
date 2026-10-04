@@ -6,6 +6,7 @@ import com.iso2t.sverve.network.temperature.TemperatureSyncTransport;
 import com.iso2t.sverve.network.temperature.TemperatureSynchronizer;
 import com.iso2t.sverve.player.environment.BiomeEnvironmentSampler;
 import com.iso2t.sverve.player.environment.NearbyHeatSampler;
+import com.iso2t.sverve.player.temperature.TemperatureProtection;
 import com.iso2t.sverve.survival.temperature.BiomeTemperatureMapping;
 import com.iso2t.sverve.survival.temperature.TemperatureBand;
 import com.iso2t.sverve.survival.temperature.TemperatureState;
@@ -29,6 +30,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.gamerules.GameRules;
@@ -149,6 +152,44 @@ public final class TemperatureGameTests {
 	}
 
 	@GameTest
+	public void wornProtectionInsulatesLiveBiomeExposureAndRemovingItRestoresWarming (GameTestHelper helper) {
+		var player = join(helper);
+		try {
+			biome(helper, player, "sverve_test:hot_test");
+			var enchantment = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(TemperatureProtection.HEAT_PROTECTION);
+			var slots = new EquipmentSlot[] { EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET };
+			var items = new net.minecraft.world.item.Item[] { Items.DIAMOND_HELMET, Items.DIAMOND_CHESTPLATE, Items.DIAMOND_LEGGINGS, Items.DIAMOND_BOOTS };
+			for (int i = 0; i < slots.length; i++) {
+				var armor = items[i].getDefaultInstance();
+				armor.enchant(enchantment, 4);
+				player.setItemSlot(slots[i], armor);
+			}
+			ticks(helper, 40);
+			near(helper, exposure(player), 0);
+			player.setItemSlot(EquipmentSlot.HEAD, net.minecraft.world.item.ItemStack.EMPTY);
+			ticks(helper, 20);
+			near(helper, exposure(player), 0.25 * -Math.expm1(-0.02));
+			for (var slot : slots) player.setItemSlot(slot, net.minecraft.world.item.ItemStack.EMPTY);
+			seed(player, 0);
+			ticks(helper, 20);
+			near(helper, exposure(player), -Math.expm1(-0.02));
+			biome(helper, player, "minecraft:snowy_plains");
+			enchantment = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(TemperatureProtection.INSULATION);
+			for (int i = 0; i < slots.length; i++) {
+				var armor = items[i].getDefaultInstance();
+				armor.enchant(enchantment, 4);
+				player.setItemSlot(slots[i], armor);
+			}
+			seed(player, -0.8);
+			ticks(helper, 20);
+			near(helper, exposure(player), -0.8 + 0.8 * -Math.expm1(-0.02));
+		} finally {
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
 	public void settingsApplyLiveAndExemptOrDisabledTicksDoNotAccumulate (GameTestHelper helper) {
 		var player = join(helper);
 		var config = runtime().getConfig().getTemperature();
@@ -202,8 +243,10 @@ public final class TemperatureGameTests {
 			ticks(helper, 20);
 			helper.assertTrue(exposure(first) > 0.7, "Hot players must continue warming");
 			helper.assertTrue(exposure(second) > -0.6, "The second player's state must advance independently");
-			near(helper, runtime().getPlayerThirst().get(first).getHydration(), firstThirst - 1.5 / 1200);
-			near(helper, runtime().getPlayerThirst().get(second).getHydration(), secondThirst - 1.0 / 1200);
+			var thirst = runtime().getConfig().getThirst();
+			double climateLoss = (1 - 0.4f) * thirst.getDryAirLoss().get();
+			near(helper, runtime().getPlayerThirst().get(first).getHydration(), firstThirst - thirst.getBaseLoss().get() - 0.7 * thirst.getHeatLoss().get() - climateLoss);
+			near(helper, runtime().getPlayerThirst().get(second).getHydration(), secondThirst - thirst.getBaseLoss().get() - climateLoss);
 		} finally {
 			leave(first);
 			leave(second);

@@ -4,6 +4,7 @@
   "package": "com.iso2t.sverve.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "BiomeClimateAccessor",
     "LivingEntityConsumptionMixin"
   ],
   "client": [],

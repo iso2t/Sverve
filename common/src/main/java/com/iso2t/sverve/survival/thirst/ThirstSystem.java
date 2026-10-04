@@ -1,7 +1,6 @@
 package com.iso2t.sverve.survival.thirst;
 
 import com.iso2t.sverve.survival.SurvivalMath;
-import com.iso2t.sverve.survival.environment.EnvironmentSample;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
@@ -10,25 +9,13 @@ public final class ThirstSystem {
 	@NonNull
 	private final ThirstConfig config;
 
-	public ThirstState advance (@NonNull ThirstState state, @NonNull EnvironmentSample environment, double bodyHeat, double seconds) {
+	/**
+	 * One additive loss model shared by native gameplay and the aggregate simulation.
+	 */
+	public ThirstState advance (@NonNull ThirstState state, boolean sprinting, double humidity, double bodyHeat, double seconds) {
 		SurvivalMath.requireRange(bodyHeat, 0.0, 1.0, "bodyHeat");
-		double loss = config.getBaseLoss().get() + bodyHeat * config.getHeatLoss().get() + (environment.isSprinting() ? config.getSprintLoss().get() : 0.0) + (1.0 - environment.getHumidity()) * config.getDryAirLoss().get();
-		return loseHydration(state, loss, seconds);
-	}
-
-	/**
-	 * Baseline and sprinting gameplay with no environmental multiplier.
-	 */
-	public ThirstState advanceActivePlay (@NonNull ThirstState state, boolean sprinting, double seconds) {
-		return advanceActivePlay(state, sprinting, 1.0, seconds);
-	}
-
-	/**
-	 * The coordinator supplies a numeric temperature contribution without coupling feature simulations.
-	 */
-	public ThirstState advanceActivePlay (@NonNull ThirstState state, boolean sprinting, double lossMultiplier, double seconds) {
-		SurvivalMath.requireRange(lossMultiplier, 1.0, 20.0, "lossMultiplier");
-		double loss = (config.getBaseLoss().get() + (sprinting ? config.getSprintLoss().get() : 0.0)) * lossMultiplier;
+		SurvivalMath.requireRange(humidity, 0.0, 1.0, "humidity");
+		double loss = config.getBaseLoss().get() + bodyHeat * config.getHeatLoss().get() + (sprinting ? config.getSprintLoss().get() : 0.0) + (1.0 - humidity) * config.getDryAirLoss().get();
 		return loseHydration(state, loss, seconds);
 	}
 

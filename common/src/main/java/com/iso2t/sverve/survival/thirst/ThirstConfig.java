@@ -14,7 +14,7 @@ public final class ThirstConfig {
 	@Comment("Base hydration lost per second. Hydration runs from 0 to 1.")
 	private final DoubleValue baseLoss = DoubleValue.of(1.0 / 1200.0, 0.0, 1.0);
 
-	@Comment("Additional hydration lost per second at maximum body heat.")
+	@Comment("Additional hydration lost per second at maximum body heat, scaled by exposure while Warm/Hot. Requires temperature metabolism.")
 	private final DoubleValue heatLoss = DoubleValue.of(0.0015, 0.0, 1.0);
 
 	@Comment("Additional hydration lost per second while sprinting.")

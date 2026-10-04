@@ -7,6 +7,7 @@ import com.iso2t.sverve.survival.temperature.TemperatureState;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffects;
 
 /**
  * Extreme body thresholds govern damage; the HUD's hysteresis never changes gameplay.
@@ -25,6 +26,11 @@ public final class TemperaturePenalties {
 			return;
 		}
 		var band = TemperatureBand.classify(state.getExposure());
+		// Reset grace time during immunity; expiry must start a fresh overheating interval.
+		if (band == TemperatureBand.HOT && player.hasEffect(MobEffects.FIRE_RESISTANCE)) {
+			timer.reset();
+			return;
+		}
 		double baseDamage = switch (band) {
 			case FREEZING -> config.getFreezingDamage().get();
 			case HOT -> config.getOverheatingDamage().get();

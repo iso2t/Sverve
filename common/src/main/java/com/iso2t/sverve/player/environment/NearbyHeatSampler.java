@@ -23,10 +23,10 @@ import net.minecraft.world.phys.Vec3;
  */
 @RequiredArgsConstructor
 public final class NearbyHeatSampler {
-	public static final TagKey<Block> CAMPFIRES = heatTag("campfires");
-	public static final TagKey<Block> TORCHES = heatTag("torches");
+	public static final TagKey<Block>    CAMPFIRES = heatTag("campfires");
+	public static final TagKey<Block>    TORCHES   = heatTag("torches");
 	@NonNull
-	private final HeatSourceConfig config;
+	private final       HeatSourceConfig config;
 
 	public double sample (@NonNull ServerPlayer player) {
 		if (!config.getEnabled().get()) return 0.0;
@@ -37,9 +37,9 @@ public final class NearbyHeatSampler {
 		double strongest = 0.0;
 		for (var pos : BlockPos.betweenClosed(center.offset(-radius, -radius, -radius), center.offset(radius, radius, radius))) {
 			if (!level.hasChunkAt(pos)) continue;
-			var target = Vec3.atCenterOf(pos);
-			double warmth = warmth(level.getBlockState(pos), origin.distanceTo(target));
+			double warmth = warmth(level.getBlockState(pos), origin, pos);
 			if (warmth <= strongest || !hasLoadedPath(player, pos)) continue;
+			var target = Vec3.atCenterOf(pos);
 			var hit = level.clip(new ClipContext(origin, target, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
 			if (hit.getType() == HitResult.Type.MISS || hit.getBlockPos().equals(pos)) strongest = warmth;
 		}
@@ -56,12 +56,31 @@ public final class NearbyHeatSampler {
 		return true;
 	}
 
-	private double warmth (BlockState state, double distance) {
-		if (state.getFluidState().is(FluidTags.LAVA)) return HeatSourceInfluence.atDistance(distance, config.getLavaRadius().get(), config.getLavaWarmth().get());
-		if (state.hasProperty(BlockStateProperties.LIT) && !state.getValue(BlockStateProperties.LIT)) return 0.0;
-		if (state.is(CAMPFIRES)) return HeatSourceInfluence.atDistance(distance, config.getCampfireRadius().get(), config.getCampfireWarmth().get());
-		if (state.is(TORCHES)) return HeatSourceInfluence.atDistance(distance, config.getTorchRadius().get(), config.getTorchWarmth().get());
-		return 0.0;
+	private double warmth (BlockState state, Vec3 origin, BlockPos pos) {
+		if (state.isAir()) return 0.0;
+		int radius;
+		double strength;
+		if (state.getFluidState().is(FluidTags.LAVA)) {
+			radius = config.getLavaRadius().get();
+			strength = config.getLavaWarmth().get();
+		} else {
+			if (state.hasProperty(BlockStateProperties.LIT) && !state.getValue(BlockStateProperties.LIT)) return 0.0;
+			if (state.is(CAMPFIRES)) {
+				radius = config.getCampfireRadius().get();
+				strength = config.getCampfireWarmth().get();
+			} else if (state.is(TORCHES)) {
+				radius = config.getTorchRadius().get();
+				strength = config.getTorchWarmth().get();
+			} else return 0.0;
+		}
+		// Ordinary blocks need neither a target vector nor a square root.
+		if (strength == 0.0) return 0.0;
+		double dx = origin.x - (pos.getX() + 0.5);
+		double dy = origin.y - (pos.getY() + 0.5);
+		double dz = origin.z - (pos.getZ() + 0.5);
+		double distanceSquared = dx * dx + dy * dy + dz * dz;
+		if (distanceSquared >= radius * radius) return 0.0;
+		return HeatSourceInfluence.atDistance(Math.sqrt(distanceSquared), radius, strength);
 	}
 
 	private static TagKey<Block> heatTag (String name) {

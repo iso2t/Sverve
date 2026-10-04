@@ -29,12 +29,6 @@ public final class TemperatureConfig {
 	@Comment("Enable heat-driven hunger/thirst loss and cold-delayed natural healing.")
 	private final BooleanValue metabolismEnabled = BooleanValue.of(true);
 
-	@Comment("Multiplier on baseline plus sprinting thirst loss while Warm.")
-	private final DoubleValue warmThirstMultiplier = DoubleValue.of(1.5, 1.0, 20.0);
-
-	@Comment("Multiplier on baseline plus sprinting thirst loss while Hot.")
-	private final DoubleValue hotThirstMultiplier = DoubleValue.of(2.0, 1.0, 20.0);
-
 	@Comment("Additional vanilla food exhaustion per second while Warm. Saturation is spent before hunger.")
 	private final DoubleValue warmFoodExhaustion = DoubleValue.of(0.1, 0.0, 10.0);
 

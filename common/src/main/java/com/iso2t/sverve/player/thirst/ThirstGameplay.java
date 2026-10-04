@@ -1,7 +1,8 @@
 package com.iso2t.sverve.player.thirst;
 
-import com.iso2t.sverve.network.thirst.ThirstSynchronizer;
 import com.iso2t.sverve.item.WaterBottles;
+import com.iso2t.sverve.network.thirst.ThirstSynchronizer;
+import com.iso2t.sverve.player.environment.BiomeEnvironmentSampler;
 import com.iso2t.sverve.player.temperature.TemperatureMetabolism;
 import com.iso2t.sverve.survival.thirst.ThirstSystem;
 import lombok.NonNull;
@@ -17,18 +18,20 @@ public final class ThirstGameplay {
 	private static final double SECONDS_PER_TICK = 1.0 / 20.0;
 
 	@NonNull
-	private final PlayerThirst          players;
+	private final PlayerThirst            players;
 	@NonNull
-	private final ThirstSystem          system;
+	private final ThirstSystem            system;
 	@NonNull
-	private final ThirstSynchronizer    synchronizer;
+	private final ThirstSynchronizer      synchronizer;
 	@NonNull
-	private final ThirstPenalties       penalties;
+	private final ThirstPenalties         penalties;
 	@NonNull
-	private final TemperatureMetabolism metabolism;
+	private final TemperatureMetabolism   metabolism;
+	@NonNull
+	private final BiomeEnvironmentSampler environment;
 
 	public void tick (@NonNull ServerPlayer player) {
-		var state = players.update(player, current -> system.advanceActivePlay(current, player.isSprinting(), metabolism.thirstMultiplier(player), SECONDS_PER_TICK));
+		var state = players.update(player, current -> system.advance(current, player.isSprinting(), environment.humidity(player), metabolism.thirstHeat(player), SECONDS_PER_TICK));
 		penalties.tick(player, state);
 		synchronizer.update(player);
 	}

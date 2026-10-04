@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Ordered display bands. Hysteresis is presentation policy, never a damage threshold.
+ * Ordered display bands. Extreme warnings enter at damage thresholds; recovery retains hysteresis.
  */
 @Getter
 @RequiredArgsConstructor
@@ -41,8 +41,8 @@ public enum TemperatureBand {
 	}
 
 	public static TemperatureBand stabilize (TemperatureBand previous, double exposure) {
-		SurvivalMath.requireRange(exposure, -1.0, 1.0, "exposure");
-		if (previous == null) return classify(exposure);
+		var actual = classify(exposure);
+		if (previous == null || actual == FREEZING || actual == HOT) return actual;
 		int index = previous.ordinal();
 		while (index > 0 && exposure < BOUNDARIES[index - 1] - HYSTERESIS) index--;
 		while (index < BOUNDARIES.length && exposure > BOUNDARIES[index] + HYSTERESIS) index++;

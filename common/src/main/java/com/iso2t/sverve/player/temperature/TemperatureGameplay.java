@@ -51,7 +51,8 @@ public final class TemperatureGameplay {
 			var sample = environment.sample(player);
 			if (moistureDue) moisture.advance(player, sample);
 			if (temperatureDue) {
-				players.update(player, state -> system.advance(state, sample, moisture.coolingWetness(player), 1));
+				var protection = TemperatureProtection.sample(player);
+				players.update(player, state -> system.advance(state, sample, moisture.coolingWetness(player), protection, 1));
 			}
 		}
 		var state = players.get(player);

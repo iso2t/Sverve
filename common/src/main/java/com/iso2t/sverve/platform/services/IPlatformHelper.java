@@ -1,6 +1,13 @@
 package com.iso2t.sverve.platform.services;
 
+import net.minecraft.world.level.biome.Biome;
+
 public interface IPlatformHelper {
+
+	/**
+	 * Reads registered climate data, including loader biome modifiers.
+	 */
+	double biomeDownfall (Biome biome);
 
 	/**
 	 * Gets the name of the current platform

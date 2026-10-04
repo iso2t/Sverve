@@ -23,16 +23,23 @@ public final class TemperatureMetabolism {
 
 	public void tick (ServerPlayer player, TemperatureState state) {
 		if (eligible(player)) {
-			player.causeFoodExhaustion((float) (system.foodExhaustionPerSecond(state.getExposure()) / 20));
+			double exposure = state.getExposure();
+			if (system.foodExhaustionPerSecond(exposure) > 0) {
+				player.causeFoodExhaustion((float) (system.foodExhaustionPerSecond(exposure, TemperatureProtection.sample(player)) / 20));
+			}
 		}
 	}
 
-	public double thirstMultiplier (ServerPlayer player) {
-		return eligible(player) ? system.thirstMultiplier(players.get(player).getExposure()) : 1;
+	public double thirstHeat (ServerPlayer player) {
+		if (!eligible(player)) return 0;
+		double exposure = players.get(player).getExposure();
+		return system.thirstHeat(exposure) == 0 ? 0 : system.thirstHeat(exposure, TemperatureProtection.sample(player));
 	}
 
 	public int healingInterval (ServerPlayer player, int original) {
-		return eligible(player) ? system.healingInterval(original, players.get(player).getExposure()) : original;
+		if (!eligible(player)) return original;
+		double exposure = players.get(player).getExposure();
+		return system.healingInterval(original, exposure) == original ? original : system.healingInterval(original, exposure, TemperatureProtection.sample(player));
 	}
 
 	private static boolean eligible (ServerPlayer player) {

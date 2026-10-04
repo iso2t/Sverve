@@ -4,7 +4,13 @@ plugins {
 }
 
 sourceSets {
+    lifecycleCheck {
+        java.srcDir(project(':common').file('src/integrationTest/java'))
+        compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+    }
     hudCheck {
+        java.srcDir(project(':common').file('src/integrationTest/java'))
         compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
         runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
     }
@@ -20,6 +26,7 @@ neoForge {
     mods {
         "${mod_id}" { sourceSet sourceSets.main }
         sverve_hud_check { sourceSet sourceSets.hudCheck }
+        sverve_lifecycle_check { sourceSet sourceSets.lifecycleCheck }
     }
     runs {
         configureEach {
@@ -30,6 +37,17 @@ neoForge {
         client {
             client()
             gameDirectory = this.mkdir(this.file('runs/client'))
+        }
+        ['seed', 'verify'].each { phase ->
+            create("lifecycle${phase.capitalize()}") {
+                server()
+                sourceSet = sourceSets.lifecycleCheck
+                loadedMods.set([project.neoForge.mods.getByName(project.mod_id),
+                                project.neoForge.mods.getByName('sverve_lifecycle_check')])
+                systemProperty('sverve.check.phase', phase)
+                programArguments.add 'nogui'
+                gameDirectory = project.file('build/lifecycle-check')
+            }
         }
         hudCheck {
             client()
@@ -53,6 +71,8 @@ neoForge {
         }
     }
 }
+
+apply from: rootProject.file('gradle/lifecycle-check.gradle')
 
 dependencies {
     implementation("com.iso2t.easyconfig:easyconfig-neoforge-${minecraft_version}:${easyconfig_version}") { transitive = false }

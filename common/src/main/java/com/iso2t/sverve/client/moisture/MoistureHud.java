@@ -13,7 +13,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.HumanoidArm;
 
 /**
- * A tiny bottom-filled droplet to the right of the hotbar, visible only while wet.
+ * A tiny bottom-filled droplet overlapping the temperature head's lower right, visible only while wet.
  */
 @RequiredArgsConstructor
 public final class MoistureHud {

@@ -15,8 +15,7 @@ public class WaterBottles {
 	public static final int MAX_STACK_SIZE = 16;
 
 	public static boolean isPlainWater (ItemInstance item) {
-		return item.typeHolder().value() == Items.POTION
-				&& item.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).is(Potions.WATER);
+		return item.typeHolder().value() == Items.POTION && item.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY).is(Potions.WATER);
 	}
 
 	public static int maxStackSize (ItemInstance item, int vanillaLimit) {

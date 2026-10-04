@@ -8,15 +8,20 @@ import com.iso2t.sverve.player.thirst.PlayerThirst;
 import com.iso2t.sverve.player.thirst.ThirstGameplay;
 import com.iso2t.sverve.survival.thirst.ThirstConfig;
 import com.iso2t.sverve.survival.thirst.ThirstState;
+import com.iso2t.sverve.test.WaterBottleChecks;
+import com.mojang.authlib.GameProfile;
 import io.netty.channel.embedded.EmbeddedChannel;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket;
+import net.minecraft.server.level.ClientInformation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.CommonListenerCookie;
 import net.minecraft.world.InteractionHand;
@@ -26,10 +31,7 @@ import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.GameType;
 
-import java.util.ArrayList;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Test-only mod: exercises real player attachments, item use, and the Fabric completion mixin.
@@ -71,12 +73,60 @@ public class ThirstGameTests {
 			seed(player, 0.2);
 			drink(player, Items.POTION.getDefaultInstance().copyWithCount(16), 32);
 			near(helper, thirst().get(player).getHydration(), 0.5);
-			helper.assertTrue(ThirstGameplay.isPlainWaterBottle(player.getMainHandItem()) && player.getMainHandItem().getCount() == 15,
-					"Drinking must leave fifteen water bottles in hand");
+			helper.assertTrue(ThirstGameplay.isPlainWaterBottle(player.getMainHandItem()) && player.getMainHandItem().getCount() == 15, "Drinking must leave fifteen water bottles in hand");
 			helper.assertTrue(player.getInventory().countItem(Items.GLASS_BOTTLE) == 1, "Drinking must return exactly one empty bottle");
 		} finally {
 			leave(player);
 		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void fullInventoriesReturnExactlyOneBottleFromEitherHand (GameTestHelper helper) {
+		var player = join(helper, GameType.SURVIVAL);
+		try {
+			seed(player, 0.2);
+			WaterBottleChecks.fullInventoryDrinking(player);
+			near(helper, thirst().get(player).getHydration(), 1);
+		} finally {
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void creativeDrinkingPreservesStacksAndDoesNotCreateRemaindersOrHydration (GameTestHelper helper) {
+		var player = join(helper, GameType.SURVIVAL);
+		try {
+			seed(player, 0.2);
+			WaterBottleChecks.creativeDrinking(player);
+			near(helper, thirst().get(player).getHydration(), 0.2);
+		} finally {
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void brewingMenuSplitsStacksAndPreservesBottleCounts (GameTestHelper helper) {
+		var player = join(helper, GameType.SURVIVAL);
+		try {
+			WaterBottleChecks.brewingMenu(player, helper.absolutePos(new BlockPos(0, 5, 0)));
+		} finally {
+			leave(player);
+		}
+		helper.succeed();
+	}
+
+	@GameTest
+	public void hoppersRespectBrewingSlotsAndUnstackableOutputs (GameTestHelper helper) {
+		WaterBottleChecks.hoppersAndBrewing(helper.getLevel(), helper.absolutePos(new BlockPos(0, 5, 0)));
+		helper.succeed();
+	}
+
+	@GameTest
+	public void dispensersConsumeAndFillOneWaterBottleAtATime (GameTestHelper helper) {
+		WaterBottleChecks.dispensers(helper.getLevel(), helper.absolutePos(new BlockPos(0, 5, 0)));
 		helper.succeed();
 	}
 
@@ -149,7 +199,10 @@ public class ThirstGameTests {
 	public void serverTickDrainsSprintingPlayersFasterAndPreservesIndependentState (GameTestHelper helper) {
 		ServerPlayer idle = join(helper, GameType.SURVIVAL);
 		ServerPlayer sprinting = join(helper, GameType.SURVIVAL);
+		var config = runtime().getConfig().getThirst();
+		double dryAirLoss = config.getDryAirLoss().get();
 		try {
+			config.getDryAirLoss().set(0.0);
 			seed(idle, 0.8);
 			seed(sprinting, 0.4);
 			sprinting.setSprinting(true);
@@ -159,6 +212,7 @@ public class ThirstGameTests {
 		} finally {
 			leave(idle);
 			leave(sprinting);
+			config.getDryAirLoss().set(dryAirLoss);
 		}
 		helper.succeed();
 	}
@@ -271,11 +325,16 @@ public class ThirstGameTests {
 	}
 
 	private static ServerPlayer join (GameTestHelper helper, GameType gameMode) {
-		ServerPlayer player = (ServerPlayer) helper.makeMockServerPlayer(gameMode);
+		// The built-in mock fixes gameMode() at construction; use a real player for mode transitions.
+		ServerPlayer player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new GameProfile(UUID.randomUUID(), "thirst-test"), ClientInformation.createDefault());
 		var cookie = CommonListenerCookie.createInitial(player.getGameProfile(), false);
 		var connection = new Connection(PacketFlow.SERVERBOUND);
 		new EmbeddedChannel(connection);
 		helper.getLevel().getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
+		player.setGameMode(gameMode);
+		player.connection.handleAcceptPlayerLoad(new ServerboundPlayerLoadedPacket());
+		// Dropped remainders must spawn in this test's loaded fixture, not an unrelated spawn chunk.
+		player.setPos(net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(new BlockPos(0, 10, 0))));
 		return player;
 	}
 

@@ -51,18 +51,32 @@ public final class TemperatureClientGameTest implements FabricClientGameTest {
 					connection.getServerPlayer().setPermanentlyInvulnerable(true);
 					connection.getServerPlayer().setNoGravity(true);
 				});
+				for (int direction : new int[] { -1, 1 }) {
+					var mild = direction < 0 ? TemperatureBand.COLD : TemperatureBand.WARM;
+					var extreme = direction < 0 ? TemperatureBand.FREEZING : TemperatureBand.HOT;
+					world.getServer().runOnServer(server -> runtime().getPlayerTemperature().update(connection.getServerPlayer(), ignored -> new TemperatureState(direction * 0.7)));
+					context.waitFor(client -> state.getSnapshot().getBand() == mild);
+					world.getServer().runOnServer(server -> runtime().getPlayerTemperature().update(connection.getServerPlayer(), ignored -> new TemperatureState(direction * 0.75)));
+					context.waitFor(client -> state.getSnapshot().getBand() == extreme);
+					context.runOnClient(client -> require(hud.isVisible(), "The damage threshold must display its warning"));
+					context.takeScreenshot("temperature-" + extreme.name().toLowerCase(java.util.Locale.ROOT) + "-at-damage-threshold");
+					world.getServer().runOnServer(server -> runtime().getPlayerTemperature().update(connection.getServerPlayer(), ignored -> new TemperatureState(direction * 0.74)));
+					context.waitTicks(2);
+					connection.waitForClientboundPackets();
+					context.runOnClient(client -> require(state.getSnapshot().getBand() == extreme, "Small recovery fluctuations must keep the warning"));
+					world.getServer().runOnServer(server -> runtime().getPlayerTemperature().update(connection.getServerPlayer(), ignored -> new TemperatureState(direction * 0.71)));
+					context.waitFor(client -> state.getSnapshot().getBand() == mild);
+				}
 				for (var dimension : List.of(Level.NETHER, Level.END, Level.OVERWORLD)) {
 					world.getServer().runOnServer(server -> {
 						var player = connection.getServerPlayer();
 						runtime().getPlayerTemperature().update(player, ignored -> TemperatureState.comfortable());
 						player.teleportTo(server.getLevel(dimension), 0.5, 80, 0.5, Set.of(), 0, 0, true);
 					});
-					context.waitFor(client -> client.level.dimension() == dimension
-							&& state.getSnapshot().getBand() == TemperatureBand.NORMAL && hud.isVisible());
+					context.waitFor(client -> client.level.dimension() == dimension && state.getSnapshot().getBand() == TemperatureBand.NORMAL && hud.isVisible());
 					connection.waitForChunksRender();
 					context.takeScreenshot("temperature-" + dimension.identifier().getPath() + "-player-face");
-					world.getServer().runOnServer(server -> runtime().getPlayerTemperature().update(
-							connection.getServerPlayer(), ignored -> new TemperatureState(1)));
+					world.getServer().runOnServer(server -> runtime().getPlayerTemperature().update(connection.getServerPlayer(), ignored -> new TemperatureState(1)));
 					context.waitFor(client -> state.getSnapshot().getBand() == TemperatureBand.HOT && hud.isVisible());
 					context.takeScreenshot("temperature-" + dimension.identifier().getPath() + "-hot");
 				}

@@ -1,0 +1,37 @@
+// Two separate JVMs share an isolated world; no development saves are touched.
+tasks.register('prepareLifecycleCheck') {
+    doLast {
+        def directory = layout.buildDirectory.dir('lifecycle-check').get().asFile
+        directory.mkdirs()
+        new File(directory, 'eula.txt').text = 'eula=true\n'
+        new File(directory, 'server.properties').text = '''online-mode=false
+server-ip=127.0.0.1
+server-port=0
+level-name=world
+level-type=minecraft:flat
+generator-settings={"biome":"minecraft:plains","layers":[{"block":"minecraft:bedrock","height":1},{"block":"minecraft:dirt","height":2},{"block":"minecraft:grass_block","height":1}],"structures":{}}
+view-distance=2
+simulation-distance=2
+spawn-chunk-radius=0
+pause-when-empty-seconds=-1
+enable-status=false
+max-tick-time=120000
+'''
+    }
+}
+
+['Seed', 'Verify'].each { phase ->
+    tasks.named("runLifecycle${phase}") {
+        dependsOn tasks.named(phase == 'Seed' ? 'prepareLifecycleCheck' : 'runLifecycleSeed')
+        doFirst {
+            layout.buildDirectory.file("lifecycle-check/${phase.toLowerCase()}-result.txt").get().asFile.text = 'RUNNING\n'
+        }
+        doLast {
+            def report = layout.buildDirectory.file("lifecycle-check/${phase.toLowerCase()}-result.txt").get().asFile
+            if (!report.isFile() || !report.text.startsWith('PASS')) {
+                throw new GradleException(report.isFile() ? report.text : "${phase} check did not finish.")
+            }
+        }
+    }
+}
+tasks.register('runLifecycleCheck') { dependsOn tasks.named('runLifecycleVerify') }

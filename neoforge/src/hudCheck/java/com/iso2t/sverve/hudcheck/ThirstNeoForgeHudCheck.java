@@ -5,6 +5,7 @@ import com.iso2t.sverve.network.temperature.TemperatureSnapshot;
 import com.iso2t.sverve.network.temperature.TemperatureSyncPayload;
 import com.iso2t.sverve.network.thirst.ThirstSnapshot;
 import com.iso2t.sverve.network.thirst.ThirstSyncPayload;
+import com.iso2t.sverve.platform.Services;
 import com.iso2t.sverve.player.temperature.TemperatureDamage;
 import com.iso2t.sverve.player.temperature.TemperatureDamageTimer;
 import com.iso2t.sverve.player.temperature.TemperatureProtection;
@@ -13,6 +14,7 @@ import com.iso2t.sverve.survival.moisture.MoistureState;
 import com.iso2t.sverve.survival.temperature.TemperatureBand;
 import com.iso2t.sverve.survival.temperature.TemperatureState;
 import com.iso2t.sverve.survival.thirst.ThirstState;
+import com.iso2t.sverve.test.WaterBottleChecks;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.screens.DeathScreen;
@@ -26,6 +28,8 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
@@ -105,7 +109,7 @@ public final class ThirstNeoForgeHudCheck {
 				return;
 			}
 			if (client.gui.screen() != null || elapsedMillis < 350) return;
-			if ((stage == 20 || stage == 22 || stage == 24) && elapsedMillis < 4500) return;
+			if ((stage == 20 || stage == 22 || stage == 24 || stage == 38) && elapsedMillis < 4500) return;
 			if ((stage == 29 || stage == 31 || stage == 33 || stage == 36 || stage == 37) && elapsedMillis < 1500) return;
 			int height = client.gui.hud.rightHeight;
 			switch (stage) {
@@ -155,8 +159,7 @@ public final class ThirstNeoForgeHudCheck {
 				case 4 -> {
 					onServer(client, player -> {
 						require(player.getData(thirstType()).getHydration() > 0.70, "Completed water drinking must restore hydration through the NeoForge event");
-						require(player.getMainHandItem().getCount() == 15 && player.getInventory().countItem(Items.GLASS_BOTTLE) == 1,
-								"NeoForge's server must consume one water bottle and return one empty bottle");
+						require(player.getMainHandItem().getCount() == 15 && player.getInventory().countItem(Items.GLASS_BOTTLE) == 1, "NeoForge's server must consume one water bottle and return one empty bottle");
 						player.setAirSupply(150);
 						player.setData(temperatureType(), new TemperatureState(1));
 					});
@@ -344,10 +347,17 @@ public final class ThirstNeoForgeHudCheck {
 				}
 				case 35 -> {
 					onServer(client, player -> {
+						WaterBottleChecks.fullInventoryDrinking(player);
+						WaterBottleChecks.creativeDrinking(player);
+						var fixture = player.blockPosition().above(5).east(5);
+						WaterBottleChecks.brewingMenu(player, fixture);
+						WaterBottleChecks.hoppersAndBrewing(player.level(), fixture);
+						WaterBottleChecks.dispensers(player.level(), fixture);
 						NearbyHeatNeoForgeCheck.prepare(player);
 						player.setData(temperatureType(), TemperatureState.comfortable());
 						player.setData(moistureType(), new MoistureState(0.8));
 					});
+					checks.add("water-bottle-full-inventory-creative-brewing-hoppers-dispensers");
 					next(36);
 				}
 				case 36 -> {
@@ -404,12 +414,20 @@ public final class ThirstNeoForgeHudCheck {
 						require(player.getActiveEffects().isEmpty(), "Temperature must not apply status effects");
 						var food = player.getFoodData();
 						var originalHealth = player.getHealth();
+						for (var slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) player.setItemSlot(slot, ItemStack.EMPTY);
 						resetFood(player, 18, 0);
 						player.setHealth(10);
 						for (int tick = 0; tick < 159; tick++) food.tick(player);
 						require(player.getHealth() == 10, "Native freezing must delay natural healing to 160 ticks");
 						food.tick(player);
 						require(player.getHealth() == 11, "Native cold healing must retain vanilla healing amount");
+						equipProtection(player, TemperatureProtection.INSULATION);
+						resetFood(player, 18, 0);
+						player.setHealth(10);
+						for (int tick = 0; tick < 79; tick++) food.tick(player);
+						require(player.getHealth() == 10, "Protected natural healing must keep its vanilla interval");
+						food.tick(player);
+						require(player.getHealth() == 11, "Full Insulation must remove the extra cold healing delay");
 						player.setHealth(originalHealth);
 						resetFood(player, 10, 0);
 					});
@@ -450,14 +468,37 @@ public final class ThirstNeoForgeHudCheck {
 					onServer(client, player -> {
 						require(player.getHealth() == 20, "Four Heat Protection IV pieces must prevent native overheating damage");
 						require(player.getActiveEffects().isEmpty(), "Heat must not apply status effects");
-						require(player.getFoodData().getFoodLevel() == 19, "Native heat must drain hunger through exhaustion");
+						require(player.getFoodData().getFoodLevel() == 20, "Full Heat Protection must remove heat exhaustion");
 						double elapsedSeconds = (player.level().getServer().getTickCount() - hotStartedAt) / 20.0;
-						double expected = hotHydration - 2 * elapsedSeconds / 1200;
-						require(Math.abs(player.getData(thirstType()).getHydration() - expected) < 0.0002, "Native Hot thirst must drain at twice the baseline rate");
+						double humidity = Services.PLATFORM.biomeDownfall(player.level().getBiome(player.blockPosition()).value());
+						require(humidity >= 0 && humidity <= 1, "Native biome humidity must be sampled");
+						double climateLoss = (1 - humidity) * 0.0005;
+						double expected = hotHydration - (1.0 / 1200 + climateLoss) * elapsedSeconds;
+						double hydration = player.getData(thirstType()).getHydration();
+						require(Math.abs(hydration - expected) < 0.0002, "Full Heat Protection must remove only the heat thirst contribution");
+						require(player.getData(temperatureType()).getExposure() > 0 && player.getData(temperatureType()).getExposure() < 1, "Protection must allow gradual body recovery");
 					});
 					checks.add("temperature-dedicated-heat-immunity");
 					checks.add("temperature-heat-hunger-and-thirst");
 					capture(client, "12-heat-immunity");
+					onServer(client, player -> {
+						for (var slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) player.setItemSlot(slot, ItemStack.EMPTY);
+						player.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 400));
+						player.setData(temperatureType(), new TemperatureState(1));
+						player.setData(thirstType(), ThirstState.hydrated());
+						resetFood(player, 20, 3.5f);
+						player.getData(temperatureTimerType()).reset();
+					});
+					next(38);
+				}
+				case 38 -> {
+					onServer(client, player -> {
+						require(player.getHealth() == 20 && player.hasEffect(MobEffects.FIRE_RESISTANCE), "Vanilla Fire Resistance must block native overheating damage");
+						require(player.getFoodData().getFoodLevel() == 19, "Fire Resistance must retain heat exhaustion");
+						require(player.getData(thirstType()).getHydration() < 0.992, "Fire Resistance must retain heat thirst loss");
+						player.removeEffect(MobEffects.FIRE_RESISTANCE);
+					});
+					checks.add("temperature-fire-resistance-damage-only");
 					next(25);
 				}
 				case 25 -> {
@@ -486,7 +527,7 @@ public final class ThirstNeoForgeHudCheck {
 	}
 
 	private void onServer (Minecraft client, Consumer<ServerPlayer> action) {
-		pending = CompletableFuture.runAsync(() -> action.accept(client.getSingleplayerServer().getPlayerList().getPlayers().getFirst()), client.getSingleplayerServer());
+		pending = CompletableFuture.allOf(pending, CompletableFuture.runAsync(() -> action.accept(client.getSingleplayerServer().getPlayerList().getPlayers().getFirst()), client.getSingleplayerServer()));
 	}
 
 	private void capture (Minecraft client, String name) {
