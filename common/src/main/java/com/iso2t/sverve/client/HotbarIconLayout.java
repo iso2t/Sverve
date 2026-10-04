@@ -9,10 +9,10 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class HotbarIconLayout {
 	public static int rightIconX (int screenWidth, boolean rightAccessory) {
-		return TemperatureIconLayout.iconX(screenWidth) + (TemperatureIconLayout.ICON_SIZE / 2) + 5;
+		return TemperatureIconLayout.iconX(screenWidth) + (TemperatureIconLayout.ICON_SIZE / 2 + 4);
 	}
 
 	public static int iconY (int screenHeight, int iconSize) {
-		return TemperatureIconLayout.iconY(screenHeight) + TemperatureIconLayout.ICON_SIZE - (iconSize / 2) - 1;
+		return TemperatureIconLayout.iconY(screenHeight) - (iconSize / 2 - 2) /*+ TemperatureIconLayout.ICON_SIZE / 2*/ /*- (iconSize / 2) - 1*/;
 	}
 }

@@ -3,6 +3,7 @@ package com.iso2t.sverve.player.thirst;
 import com.iso2t.sverve.item.WaterBottles;
 import com.iso2t.sverve.network.thirst.ThirstSynchronizer;
 import com.iso2t.sverve.player.environment.BiomeEnvironmentSampler;
+import com.iso2t.sverve.player.exertion.LoadExertion;
 import com.iso2t.sverve.player.temperature.TemperatureMetabolism;
 import com.iso2t.sverve.survival.thirst.ThirstSystem;
 import lombok.NonNull;
@@ -29,10 +30,20 @@ public final class ThirstGameplay {
 	private final TemperatureMetabolism   metabolism;
 	@NonNull
 	private final BiomeEnvironmentSampler environment;
+	@NonNull
+	private final LoadExertion            exertion;
 
 	public void tick (@NonNull ServerPlayer player) {
+		((ThirstMovementAccess) player).sverve$setThirstGameplay(this);
 		var state = players.update(player, current -> system.advance(current, player.isSprinting(), environment.humidity(player), metabolism.thirstHeat(player), SECONDS_PER_TICK));
 		penalties.tick(player, state);
+		synchronizer.update(player);
+	}
+
+	public void moved (@NonNull ServerPlayer player, double dx, double dy, double dz) {
+		double loss = exertion.waterLoss(player, dx, dy, dz);
+		if (loss == 0.0) return;
+		players.update(player, state -> system.exert(state, loss));
 		synchronizer.update(player);
 	}
 

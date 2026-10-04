@@ -23,6 +23,11 @@ public final class ThirstSystem {
 		return config.getEnabled().get() ? state.drink(config.getWaterBottleHydration().get()) : state;
 	}
 
+	public ThirstState exert (@NonNull ThirstState state, double waterLoss) {
+		SurvivalMath.requireRange(waterLoss, 0.0, Double.MAX_VALUE, "waterLoss");
+		return loseHydration(state, waterLoss, 1.0);
+	}
+
 	private ThirstState loseHydration (ThirstState state, double loss, double seconds) {
 		SurvivalMath.requireRange(seconds, 0.0, Double.MAX_VALUE, "seconds");
 		if (!config.getEnabled().get() || seconds == 0.0 || loss == 0.0 || state.getHydration() == 0.0) return state;

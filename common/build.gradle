@@ -13,6 +13,7 @@ neoForge {
 }
 
 dependencies {
+    testImplementation("com.iso2t.heavyinventories:api:${heavyinventories_version}") { transitive = false }
     // Loader-specific Easy Config mods provide these classes at runtime.
     compileOnly("com.iso2t.easyconfig:api:${easyconfig_api_version}")
     testImplementation("com.iso2t.easyconfig:api:${easyconfig_api_version}")

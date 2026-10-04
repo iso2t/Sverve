@@ -12,6 +12,12 @@
   "environment": "*",
   "accessWidener": "${mod_id}.accesswidener",
   "entrypoints": {
+    "heavyinventories": [
+      "com.iso2t.sverve.compat.heavyinventories.SverveWeightPlugin"
+    ],
+    "heavyinventories_client": [
+      "com.iso2t.sverve.compat.heavyinventories.client.SverveWeightHudPlugin"
+    ],
     "main": [
       "com.iso2t.sverve.SverveFabric"
     ],
@@ -23,6 +29,12 @@
     "${mod_id}.mixins.json",
     "${mod_id}.fabric.mixins.json"
   ],
+  "suggests": {
+    "heavyinventories": ">=${heavyinventories_min_version}"
+  },
+  "breaks": {
+    "heavyinventories": "<${heavyinventories_min_version}"
+  },
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
     "fabric-api": "*",

@@ -12,6 +12,12 @@ configurations {
 }
 
 dependencies {
+    // Opt in for development/testing; never bundle HI or its standalone API in Sverve.
+    if (providers.gradleProperty('withHeavyInventories').map { it.toBoolean() }.getOrElse(false)) {
+        runtimeOnly("com.iso2t.heavyinventories:heavyinventories-${project.name}-${minecraft_version}:${heavyinventories_version}") {
+            transitive = false
+        }
+    }
     compileOnly(project(':common')) {
         def loaderAttribute = Attribute.of('io.github.mcgradleconventions.loader', String)
         attributes {

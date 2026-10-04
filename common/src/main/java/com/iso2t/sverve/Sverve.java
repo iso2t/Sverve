@@ -13,6 +13,7 @@ import com.iso2t.sverve.network.thirst.ThirstSynchronizer;
 import com.iso2t.sverve.platform.Services;
 import com.iso2t.sverve.player.environment.BiomeEnvironmentSampler;
 import com.iso2t.sverve.player.environment.NearbyHeatSampler;
+import com.iso2t.sverve.player.exertion.LoadExertion;
 import com.iso2t.sverve.player.moisture.MoistureGameplay;
 import com.iso2t.sverve.player.moisture.MoistureStorage;
 import com.iso2t.sverve.player.moisture.PlayerMoisture;
@@ -22,6 +23,7 @@ import com.iso2t.sverve.player.thirst.ThirstGameplay;
 import com.iso2t.sverve.player.thirst.ThirstPenalties;
 import com.iso2t.sverve.player.thirst.ThirstStorage;
 import com.iso2t.sverve.survival.SurvivalEngine;
+import com.iso2t.sverve.survival.exertion.LoadExertionSystem;
 import com.iso2t.sverve.survival.moisture.MoistureSystem;
 import com.iso2t.sverve.survival.temperature.BiomeTemperatureMapping;
 import com.iso2t.sverve.survival.temperature.TemperatureMetabolismSystem;
@@ -48,6 +50,6 @@ public class Sverve {
 		var temperatureSynchronizer = new TemperatureSynchronizer(playerTemperature, config.getTemperature(), temperatureTransport);
 		var environment = new BiomeEnvironmentSampler(new BiomeTemperatureMapping(config.getTemperature()), new NearbyHeatSampler(config.getHeatSources()));
 		var temperatureGameplay = new TemperatureGameplay(playerTemperature, temperatureStorage, config.getTemperature(), new TemperatureSystem(config.getTemperature()), environment, temperatureSynchronizer, new TemperaturePenalties(temperatureStorage, config.getTemperature()), metabolism, moistureGameplay);
-		return new SverveRuntime(config, SurvivalEngine.create(config), playerThirst, new ThirstGameplay(playerThirst, new ThirstSystem(config.getThirst()), synchronizer, new ThirstPenalties(storage, config.getThirst()), metabolism, environment), synchronizer, playerTemperature, temperatureGameplay, temperatureSynchronizer, metabolism, playerMoisture, moistureGameplay, moistureSynchronizer);
+		return new SverveRuntime(config, SurvivalEngine.create(config), playerThirst, new ThirstGameplay(playerThirst, new ThirstSystem(config.getThirst()), synchronizer, new ThirstPenalties(storage, config.getThirst()), metabolism, environment, new LoadExertion(new LoadExertionSystem(config.getHeavyInventories()))), synchronizer, playerTemperature, temperatureGameplay, temperatureSynchronizer, metabolism, playerMoisture, moistureGameplay, moistureSynchronizer);
 	}
 }

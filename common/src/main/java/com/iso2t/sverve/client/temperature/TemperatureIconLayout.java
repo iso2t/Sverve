@@ -7,7 +7,7 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 public class TemperatureIconLayout {
-	public static final int ICON_SIZE = 13;
+	public static final int ICON_SIZE = 14;
 
 	public static int iconX (int screenWidth) {
 		return screenWidth / 2 - ICON_SIZE / 2;

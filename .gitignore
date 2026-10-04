@@ -29,3 +29,8 @@ runs
 /fabric/src/generated/resources/.cache/
 /docs/
 /common/src/test/
+/neoforge/src/hudCheck/
+/neoforge/src/lifecycleCheck/
+/fabric/src/gametest/
+/fabric/src/lifecycleCheck/
+/common/src/integrationTest/
