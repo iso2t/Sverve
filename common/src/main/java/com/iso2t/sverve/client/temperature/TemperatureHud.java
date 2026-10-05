@@ -13,27 +13,25 @@ import net.minecraft.resources.Identifier;
 
 import java.util.Locale;
 
-/**
- * The player's live skin with a temperature overlay for non-normal bands.
- */
 @RequiredArgsConstructor
 public final class TemperatureHud {
+
 	public static final Identifier             LAYER = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "temperature");
 	@NonNull
 	private final       ClientTemperatureState state;
 
 	public boolean isVisible () {
 		var snapshot = state.getSnapshot();
-		return snapshot != null && SurvivalHudVisibility.canShow(snapshot.isEnabled());
+		return snapshot != null && SurvivalHudVisibility.canShow(snapshot.enabled());
 	}
 
 	public void extract (GuiGraphicsExtractor graphics) {
 		if (!isVisible()) return;
-		int x = TemperatureIconLayout.iconX(graphics.guiWidth());
-		int y = TemperatureIconLayout.iconY(graphics.guiHeight());
-		int size = TemperatureIconLayout.ICON_SIZE;
-		var band = state.getSnapshot().getBand();
-		PlayerFaceExtractor.extractRenderState(graphics, Minecraft.getInstance().player.getSkin(), x, y, size);
+		var x = TemperatureIconLayout.iconX(graphics.guiWidth());
+		var y = TemperatureIconLayout.iconY(graphics.guiHeight());
+		var size = TemperatureIconLayout.ICON_SIZE;
+		var band = state.getSnapshot().band();
+		if (Minecraft.getInstance().player != null) PlayerFaceExtractor.extractRenderState(graphics, Minecraft.getInstance().player.getSkin(), x, y, size);
 		if (band != TemperatureBand.NORMAL) {
 			graphics.blitSprite(RenderPipelines.GUI_TEXTURED, overlaySprite(band), x, y, size, size);
 		}

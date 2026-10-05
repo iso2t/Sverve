@@ -4,11 +4,9 @@ import com.iso2t.sverve.network.moisture.MoistureSnapshot;
 import lombok.Getter;
 import lombok.NonNull;
 
-/**
- * One connection's server-selected fill; cleared when joining or leaving a world.
- */
 @Getter
 public final class ClientMoistureState {
+
 	private MoistureSnapshot snapshot;
 
 	public void accept (@NonNull MoistureSnapshot snapshot) {

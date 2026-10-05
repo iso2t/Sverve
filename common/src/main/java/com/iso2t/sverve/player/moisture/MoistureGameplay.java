@@ -3,17 +3,15 @@ package com.iso2t.sverve.player.moisture;
 import com.iso2t.sverve.network.moisture.MoistureSynchronizer;
 import com.iso2t.sverve.player.SurvivalEligibility;
 import com.iso2t.sverve.survival.environment.EnvironmentSample;
-import com.iso2t.sverve.survival.moisture.MoistureConfig;
+import com.iso2t.sverve.config.MoistureConfig;
 import com.iso2t.sverve.survival.moisture.MoistureSystem;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.server.level.ServerPlayer;
 
-/**
- * Schedules soaking/drying; the climate coordinator samples the world once when either feature is due.
- */
 @RequiredArgsConstructor
 public final class MoistureGameplay {
+
 	@NonNull
 	private final PlayerMoisture       players;
 	@NonNull
@@ -30,7 +28,7 @@ public final class MoistureGameplay {
 			pause(player);
 			return false;
 		}
-		return storage.clock(player).advance();
+		return storage.getClock(player).advance();
 	}
 
 	public void advance (ServerPlayer player, EnvironmentSample sample) {
@@ -52,6 +50,6 @@ public final class MoistureGameplay {
 	}
 
 	public void pause (ServerPlayer player) {
-		storage.clock(player).reset();
+		storage.getClock(player).reset();
 	}
 }

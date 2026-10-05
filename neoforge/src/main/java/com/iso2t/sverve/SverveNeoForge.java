@@ -16,9 +16,17 @@ import net.neoforged.fml.common.Mod;
 @Getter
 @Mod(Constants.MOD_ID)
 public final class SverveNeoForge {
+
 	private final SverveRuntime runtime;
 
 	public SverveNeoForge (IEventBus modBus) {
+		runtime = createRuntime(modBus);
+		NeoForgeThirstLifecycle.register(runtime.thirst().synchronizer());
+		NeoForgeThirstGameplay.register(runtime.thirst().gameplay());
+		NeoForgeTemperatureEvents.register(runtime.temperature().gameplay());
+	}
+
+	private static SverveRuntime createRuntime (IEventBus modBus) {
 		var storage = new NeoForgeThirstStorage();
 		storage.register(modBus);
 		var transport = new NeoForgeThirstSyncTransport();
@@ -31,9 +39,6 @@ public final class SverveNeoForge {
 		moistureStorage.register(modBus);
 		var moistureTransport = new NeoForgeMoistureSyncTransport();
 		moistureTransport.register(modBus);
-		runtime = Sverve.initialize(storage, transport, temperatureStorage, temperatureTransport, moistureStorage, moistureTransport);
-		NeoForgeThirstLifecycle.register(runtime.getThirstSynchronizer());
-		NeoForgeThirstGameplay.register(runtime.getThirstGameplay());
-		NeoForgeTemperatureEvents.register(runtime.getTemperatureGameplay());
+		return Sverve.initialize(storage, transport, temperatureStorage, temperatureTransport, moistureStorage, moistureTransport);
 	}
 }

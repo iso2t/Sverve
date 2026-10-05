@@ -1,16 +1,14 @@
 package com.iso2t.sverve.network.thirst;
 
 import com.iso2t.sverve.player.thirst.PlayerThirst;
-import com.iso2t.sverve.survival.thirst.ThirstConfig;
+import com.iso2t.sverve.config.ThirstConfig;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import net.minecraft.server.level.ServerPlayer;
 
-/**
- * Server-thread snapshots, sent on visible changes or forced after lifecycle transitions.
- */
 @RequiredArgsConstructor
 public final class ThirstSynchronizer {
+
 	@NonNull
 	private final PlayerThirst        players;
 	@NonNull
@@ -28,7 +26,7 @@ public final class ThirstSynchronizer {
 
 	private void publish (ServerPlayer player, boolean force) {
 		var snapshot = ThirstSnapshot.from(players.get(player), config.getEnabled().get());
-		var tracker = transport.tracker(player);
+		var tracker = transport.getTracker(player);
 		if ((force || tracker.needsUpdate(snapshot)) && transport.send(player, new ThirstSyncPayload(snapshot))) {
 			tracker.markSent(snapshot);
 		}

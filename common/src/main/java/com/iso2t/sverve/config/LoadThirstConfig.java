@@ -1,4 +1,4 @@
-package com.iso2t.sverve.survival.exertion;
+package com.iso2t.sverve.config;
 
 import com.iso2t.easyconfig.api.annotations.Comment;
 import com.iso2t.easyconfig.api.value.wrappers.BooleanValue;
@@ -6,7 +6,8 @@ import com.iso2t.easyconfig.api.value.wrappers.DoubleValue;
 import lombok.Getter;
 
 @Getter
-public final class LoadExertionConfig {
+public final class LoadThirstConfig {
+
 	@Comment("Extra thirst from voluntary movement with Heavy Inventories installed. HI owns weight-based hunger costs.")
 	private final BooleanValue enabled = BooleanValue.of(true);
 

@@ -7,16 +7,14 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
-/**
- * Fabric owns persistence and copying on non-death player replacement.
- */
 public final class FabricThirstStorage implements ThirstStorage {
-	private final AttachmentType<ThirstState>      thirst      = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "thirst"), builder -> builder.initializer(ThirstState::hydrated).persistent(ThirstPersistence.CODEC.codec()));
-	// Intentionally omit copyOnDeath: respawning starts fully hydrated, even with keepInventory.
+
+	private final AttachmentType<ThirstState> thirst = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "thirst"), builder -> builder.initializer(ThirstState::hydrated).persistent(ThirstPersistence.CODEC.codec()));
+
 	private final AttachmentType<DehydrationTimer> damageTimer = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "dehydration_timer"), builder -> builder.initializer(DehydrationTimer::new));
 
 	@Override
-	public DehydrationTimer damageTimer (ServerPlayer player) {
+	public DehydrationTimer getDamageTimer (ServerPlayer player) {
 		return player.getAttachedOrCreate(damageTimer);
 	}
 

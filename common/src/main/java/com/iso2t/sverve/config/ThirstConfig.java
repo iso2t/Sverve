@@ -1,4 +1,4 @@
-package com.iso2t.sverve.survival.thirst;
+package com.iso2t.sverve.config;
 
 import com.iso2t.easyconfig.api.annotations.Comment;
 import com.iso2t.easyconfig.api.value.wrappers.BooleanValue;
@@ -8,6 +8,7 @@ import lombok.Getter;
 
 @Getter
 public final class ThirstConfig {
+
 	@Comment("Enable thirst drain, water bottle hydration, dehydration damage, and the thirst bar.")
 	private final BooleanValue enabled = BooleanValue.of(true);
 

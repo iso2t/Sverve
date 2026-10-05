@@ -7,11 +7,9 @@ import com.iso2t.heavyinventories.api.plugin.HIPlugin;
 import com.iso2t.sverve.Constants;
 import net.minecraft.resources.Identifier;
 
-/**
- * HI discovers this only on the client; its renderer choice remains available to the player.
- */
 @HIPlugin(HIPlugin.Side.CLIENT)
 public final class SverveWeightHudPlugin implements HeavyInventoriesClientPlugin {
+
 	public static final Identifier OWNER = Identifier.fromNamespaceAndPath(Constants.MOD_ID, "load_bar");
 
 	@Override

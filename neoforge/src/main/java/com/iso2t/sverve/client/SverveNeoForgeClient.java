@@ -22,31 +22,49 @@ import net.neoforged.neoforge.common.NeoForge;
 
 @Mod(value = Constants.MOD_ID, dist = Dist.CLIENT)
 public final class SverveNeoForgeClient {
+
+	private final ClientMoistureState    moisture    = new ClientMoistureState();
+	private final ClientTemperatureState temperature = new ClientTemperatureState();
+	private final ClientThirstState      thirst      = new ClientThirstState();
+
 	public SverveNeoForgeClient (IEventBus modBus) {
-		var moisture = new ClientMoistureState();
-		var moistureHud = new MoistureHud(moisture);
-		modBus.addListener((RegisterClientPayloadHandlersEvent event) -> event.register(MoistureSyncPayload.TYPE, (payload, context) -> moisture.accept(payload.getSnapshot())));
-		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn event) -> moisture.clear());
-		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut event) -> moisture.clear());
-		var state = new ClientThirstState();
-		var hud = new ThirstHud(state);
-		var temperature = new ClientTemperatureState();
-		var temperatureHud = new TemperatureHud(temperature);
-		modBus.addListener((RegisterClientPayloadHandlersEvent event) -> event.register(TemperatureSyncPayload.TYPE, (payload, context) -> temperature.accept(payload.getSnapshot())));
-		modBus.addListener((RegisterGuiLayersEvent event) -> {
-			event.registerAbove(VanillaGuiLayers.FOOD_LEVEL, TemperatureHud.LAYER, (graphics, delta) -> temperatureHud.extract(graphics));
-			event.registerAbove(TemperatureHud.LAYER, MoistureHud.LAYER, (graphics, delta) -> moistureHud.extract(graphics));
+		registerNetworking(modBus);
+		registerConnections();
+		registerHud(modBus);
+	}
+
+	private void registerNetworking (IEventBus modBus) {
+		modBus.addListener((RegisterClientPayloadHandlersEvent event) -> {
+			event.register(MoistureSyncPayload.TYPE, (payload, _) -> moisture.accept(payload.snapshot()));
+			event.register(TemperatureSyncPayload.TYPE, (payload, _) -> temperature.accept(payload.snapshot()));
+			event.register(ThirstSyncPayload.TYPE, (payload, _) -> thirst.accept(payload.snapshot()));
 		});
-		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn event) -> temperature.clear());
-		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut event) -> temperature.clear());
-		modBus.addListener((RegisterClientPayloadHandlersEvent event) -> event.register(ThirstSyncPayload.TYPE, (payload, context) -> state.accept(payload.getSnapshot())));
-		modBus.addListener((RegisterGuiLayersEvent event) -> event.registerAbove(VanillaGuiLayers.AIR_LEVEL, ThirstHud.LAYER, (graphics, delta) -> {
-			if (!hud.isVisible()) return;
-			var nativeHud = Minecraft.getInstance().gui.hud;
-			hud.extract(graphics, graphics.guiHeight() - nativeHud.rightHeight);
-			nativeHud.rightHeight += ThirstHud.ROW_HEIGHT;
-		}));
-		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn event) -> state.clear());
-		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut event) -> state.clear());
+	}
+
+	private void registerConnections () {
+		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingIn _) -> clear());
+		NeoForge.EVENT_BUS.addListener((ClientPlayerNetworkEvent.LoggingOut _) -> clear());
+	}
+
+	private void clear () {
+		moisture.clear();
+		temperature.clear();
+		thirst.clear();
+	}
+
+	private void registerHud (IEventBus modBus) {
+		var moistureHud = new MoistureHud(moisture);
+		var temperatureHud = new TemperatureHud(temperature);
+		var thirstHud = new ThirstHud(thirst);
+		modBus.addListener((RegisterGuiLayersEvent event) -> {
+			event.registerAbove(VanillaGuiLayers.FOOD_LEVEL, TemperatureHud.LAYER, (graphics, _) -> temperatureHud.extract(graphics));
+			event.registerAbove(TemperatureHud.LAYER, MoistureHud.LAYER, (graphics, _) -> moistureHud.extract(graphics));
+			event.registerAbove(VanillaGuiLayers.AIR_LEVEL, ThirstHud.LAYER, (graphics, _) -> {
+				if (!thirstHud.isVisible()) return;
+				var nativeHud = Minecraft.getInstance().gui.hud;
+				thirstHud.extract(graphics, graphics.guiHeight() - nativeHud.rightHeight);
+				nativeHud.rightHeight += ThirstHud.ROW_HEIGHT;
+			});
+		});
 	}
 }

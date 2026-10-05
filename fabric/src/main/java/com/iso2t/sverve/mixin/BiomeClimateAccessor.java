@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(Biome.class)
 public interface BiomeClimateAccessor {
+
 	@Accessor("climateSettings")
 	Biome.ClimateSettings sverve$getClimateSettings ();
 }

@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class FabricThirstSyncTransport implements ThirstSyncTransport {
+
 	private final AttachmentType<ThirstSyncTracker> tracker = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "thirst_sync"), builder -> builder.initializer(ThirstSyncTracker::new));
 
 	public FabricThirstSyncTransport () {
@@ -16,7 +17,7 @@ public final class FabricThirstSyncTransport implements ThirstSyncTransport {
 	}
 
 	@Override
-	public ThirstSyncTracker tracker (ServerPlayer player) {
+	public ThirstSyncTracker getTracker (ServerPlayer player) {
 		return player.getAttachedOrCreate(tracker);
 	}
 

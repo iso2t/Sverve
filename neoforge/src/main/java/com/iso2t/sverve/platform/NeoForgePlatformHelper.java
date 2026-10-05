@@ -1,14 +1,14 @@
 package com.iso2t.sverve.platform;
 
-import com.iso2t.sverve.platform.services.IPlatformHelper;
+import com.iso2t.sverve.platform.services.PlatformHelper;
 import net.minecraft.world.level.biome.Biome;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLLoader;
 
-public class NeoForgePlatformHelper implements IPlatformHelper {
+public class NeoForgePlatformHelper implements PlatformHelper {
 
 	@Override
-	public double biomeDownfall (Biome biome) {
+	public double getBiomeDownfall (Biome biome) {
 		return biome.getModifiedClimateSettings().downfall();
 	}
 

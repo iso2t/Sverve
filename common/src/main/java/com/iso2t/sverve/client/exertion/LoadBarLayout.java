@@ -3,11 +3,9 @@ package com.iso2t.sverve.client.exertion;
 import com.iso2t.sverve.client.temperature.TemperatureIconLayout;
 import lombok.experimental.UtilityClass;
 
-/**
- * An item-style load bar over the face's bottom two rows, left of the moisture droplet.
- */
 @UtilityClass
 public class LoadBarLayout {
+
 	public static final int WIDTH          = TemperatureIconLayout.ICON_SIZE - 3;
 	public static final int HEIGHT         = 2;
 	public static final int INNER_WIDTH    = WIDTH - 2;
@@ -21,7 +19,7 @@ public class LoadBarLayout {
 	}
 
 	public static int y (int screenHeight) {
-		return TemperatureIconLayout.iconY(screenHeight) + TemperatureIconLayout.ICON_SIZE - HEIGHT;
+		return TemperatureIconLayout.iconY(screenHeight) + TemperatureIconLayout.ICON_SIZE - HEIGHT + 1;
 	}
 
 	public static int fillWidth (double ratio) {
@@ -30,6 +28,8 @@ public class LoadBarLayout {
 	}
 
 	public static int color (double ratio) {
-		return ratio >= 1.0 ? OVERLOAD_COLOR : ratio >= 0.9 ? WARNING_COLOR : NORMAL_COLOR;
+		if (ratio >= 1.0) return OVERLOAD_COLOR;
+		if (ratio >= 0.9) return WARNING_COLOR;
+		return NORMAL_COLOR;
 	}
 }

@@ -9,16 +9,14 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * Observes movement without replacing vanilla or HI's hunger/statistic calculations.
- */
 @Mixin(ServerPlayer.class)
 public abstract class ServerPlayerThirstMixin implements ThirstMovementAccess {
+
 	@Unique
 	private ThirstGameplay sverve$thirst;
 
 	@Override
-	public void sverve$setThirstGameplay (ThirstGameplay gameplay) {
+	public void sverve$bindThirst (ThirstGameplay gameplay) {
 		sverve$thirst = gameplay;
 	}
 

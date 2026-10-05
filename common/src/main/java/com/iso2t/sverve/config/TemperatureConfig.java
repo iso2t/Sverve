@@ -1,4 +1,4 @@
-package com.iso2t.sverve.survival.temperature;
+package com.iso2t.sverve.config;
 
 import com.iso2t.easyconfig.api.annotations.Comment;
 import com.iso2t.easyconfig.api.value.wrappers.BooleanValue;
@@ -8,6 +8,7 @@ import lombok.Getter;
 
 @Getter
 public final class TemperatureConfig {
+
 	@Comment("Enable body temperature changes, penalties, and its HUD icon.")
 	private final BooleanValue enabled = BooleanValue.of(true);
 

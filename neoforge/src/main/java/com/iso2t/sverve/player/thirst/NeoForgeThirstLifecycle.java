@@ -6,11 +6,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-/**
- * Refreshes the owner after native loading/copying has established the current attachment.
- */
 @UtilityClass
 public class NeoForgeThirstLifecycle {
+
 	public static void register (ThirstSynchronizer synchronizer) {
 		NeoForge.EVENT_BUS.addListener((PlayerEvent.PlayerLoggedInEvent event) -> {
 			if (event.getEntity() instanceof ServerPlayer player) synchronizer.refresh(player);

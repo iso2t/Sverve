@@ -3,11 +3,9 @@ package com.iso2t.sverve.client;
 import lombok.experimental.UtilityClass;
 import net.minecraft.client.Minecraft;
 
-/**
- * Shared native visibility rules for server-driven survival indicators.
- */
 @UtilityClass
 public class SurvivalHudVisibility {
+
 	public static boolean canShow (boolean enabled) {
 		var client = Minecraft.getInstance();
 		var player = client.player;

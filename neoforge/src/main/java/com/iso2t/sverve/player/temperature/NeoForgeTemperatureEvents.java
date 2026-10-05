@@ -6,11 +6,9 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-/**
- * Native lifecycle and tick bridges; temperature calculations stay in common.
- */
 @UtilityClass
 public class NeoForgeTemperatureEvents {
+
 	public static void register (TemperatureGameplay gameplay) {
 		NeoForge.EVENT_BUS.addListener((PlayerTickEvent.Post event) -> {
 			if (event.getEntity() instanceof ServerPlayer player) gameplay.tick(player);

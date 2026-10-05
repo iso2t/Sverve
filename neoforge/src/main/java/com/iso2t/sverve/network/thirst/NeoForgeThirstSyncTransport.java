@@ -12,6 +12,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 public final class NeoForgeThirstSyncTransport implements ThirstSyncTransport {
+
 	private final DeferredRegister<AttachmentType<?>>         attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
 	private final Supplier<AttachmentType<ThirstSyncTracker>> tracker     = attachments.register("thirst_sync", () -> AttachmentType.builder(ThirstSyncTracker::new).build());
 
@@ -21,7 +22,7 @@ public final class NeoForgeThirstSyncTransport implements ThirstSyncTransport {
 	}
 
 	@Override
-	public ThirstSyncTracker tracker (ServerPlayer player) {
+	public ThirstSyncTracker getTracker (ServerPlayer player) {
 		return player.getData(tracker);
 	}
 

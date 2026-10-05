@@ -12,6 +12,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 public final class NeoForgeTemperatureSyncTransport implements TemperatureSyncTransport {
+
 	private final DeferredRegister<AttachmentType<?>>              attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
 	private final Supplier<AttachmentType<TemperatureSyncTracker>> tracker     = attachments.register("temperature_sync", () -> AttachmentType.builder(TemperatureSyncTracker::new).build());
 
@@ -21,7 +22,7 @@ public final class NeoForgeTemperatureSyncTransport implements TemperatureSyncTr
 	}
 
 	@Override
-	public TemperatureSyncTracker tracker (ServerPlayer player) {
+	public TemperatureSyncTracker getTracker (ServerPlayer player) {
 		return player.getData(tracker);
 	}
 

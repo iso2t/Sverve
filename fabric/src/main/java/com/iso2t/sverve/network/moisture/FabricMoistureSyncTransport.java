@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class FabricMoistureSyncTransport implements MoistureSyncTransport {
+
 	private final AttachmentType<MoistureSyncTracker> tracker = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "moisture_sync"), builder -> builder.initializer(MoistureSyncTracker::new));
 
 	public FabricMoistureSyncTransport () {
@@ -16,7 +17,7 @@ public final class FabricMoistureSyncTransport implements MoistureSyncTransport 
 	}
 
 	@Override
-	public MoistureSyncTracker tracker (ServerPlayer player) {
+	public MoistureSyncTracker getTracker (ServerPlayer player) {
 		return player.getAttachedOrCreate(tracker);
 	}
 

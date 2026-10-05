@@ -9,11 +9,9 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
-/**
- * Server-side body temperature access; load/save remain active for exempt players.
- */
 @RequiredArgsConstructor
 public final class PlayerTemperature {
+
 	@NonNull
 	private final TemperatureStorage storage;
 

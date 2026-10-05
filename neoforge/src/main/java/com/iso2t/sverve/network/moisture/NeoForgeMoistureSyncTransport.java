@@ -12,6 +12,7 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 public final class NeoForgeMoistureSyncTransport implements MoistureSyncTransport {
+
 	private final DeferredRegister<AttachmentType<?>>           attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
 	private final Supplier<AttachmentType<MoistureSyncTracker>> tracker     = attachments.register("moisture_sync", () -> AttachmentType.builder(MoistureSyncTracker::new).build());
 
@@ -21,7 +22,7 @@ public final class NeoForgeMoistureSyncTransport implements MoistureSyncTranspor
 	}
 
 	@Override
-	public MoistureSyncTracker tracker (ServerPlayer player) {
+	public MoistureSyncTracker getTracker (ServerPlayer player) {
 		return player.getData(tracker);
 	}
 

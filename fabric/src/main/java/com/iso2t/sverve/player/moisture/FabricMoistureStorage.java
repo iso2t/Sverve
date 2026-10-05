@@ -8,9 +8,10 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class FabricMoistureStorage implements MoistureStorage {
-	private final AttachmentType<MoistureState>       moisture = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "moisture"), builder -> builder.initializer(MoistureState::dry).persistent(MoisturePersistence.CODEC.codec()));
-	// No copyOnDeath: death respawn starts dry regardless of keepInventory.
-	private final AttachmentType<MoistureUpdateClock> clock    = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "moisture_clock"), builder -> builder.initializer(MoistureUpdateClock::new));
+
+	private final AttachmentType<MoistureState> moisture = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "moisture"), builder -> builder.initializer(MoistureState::dry).persistent(MoisturePersistence.CODEC.codec()));
+
+	private final AttachmentType<MoistureUpdateClock> clock = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "moisture_clock"), builder -> builder.initializer(MoistureUpdateClock::new));
 
 	@Override
 	public MoistureState get (ServerPlayer player) {
@@ -23,7 +24,7 @@ public final class FabricMoistureStorage implements MoistureStorage {
 	}
 
 	@Override
-	public MoistureUpdateClock clock (ServerPlayer player) {
+	public MoistureUpdateClock getClock (ServerPlayer player) {
 		return player.getAttachedOrCreate(clock);
 	}
 }

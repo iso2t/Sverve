@@ -113,6 +113,12 @@ Open this directory as a Gradle project and set both the project SDK and Gradle 
 
 Shared gameplay belongs in `common`; native loader hooks belong in `fabric` and `neoforge`.
 Feature state, settings, and calculations live together under `survival/<feature>`.
+`SverveRuntime` exposes thirst, temperature, and moisture through their feature services.
+Each feature owns its player access, gameplay coordinator, and synchronizer under `player/<feature>`.
+Use short names that read in the context of their class: `consume`, `drain`, `sample`, `refresh`.
+Tests name the case, such as `armorChanges` or `persistence`; assertions explain the expected result.
+The project EditorConfig keeps Java tabs, aligned fields, and spacing consistent. Source comments
+and JavaDoc are omitted.
 The original build layout comes from the MultiLoader Template.
 
 ## License

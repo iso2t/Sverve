@@ -10,17 +10,15 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.function.Supplier;
 
-/**
- * NeoForge owns persistence and copying on non-death player replacement.
- */
 public final class NeoForgeThirstStorage implements ThirstStorage {
-	private final DeferredRegister<AttachmentType<?>>        attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
-	private final Supplier<AttachmentType<ThirstState>>      thirst      = attachments.register("thirst", () -> AttachmentType.builder(ThirstState::hydrated).serialize(ThirstPersistence.CODEC).build());
-	// Intentionally omit copyOnDeath: respawning starts fully hydrated, even with keepInventory.
+
+	private final DeferredRegister<AttachmentType<?>>   attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
+	private final Supplier<AttachmentType<ThirstState>> thirst      = attachments.register("thirst", () -> AttachmentType.builder(ThirstState::hydrated).serialize(ThirstPersistence.CODEC).build());
+
 	private final Supplier<AttachmentType<DehydrationTimer>> damageTimer = attachments.register("dehydration_timer", () -> AttachmentType.builder(DehydrationTimer::new).build());
 
 	@Override
-	public DehydrationTimer damageTimer (ServerPlayer player) {
+	public DehydrationTimer getDamageTimer (ServerPlayer player) {
 		return player.getData(damageTimer);
 	}
 

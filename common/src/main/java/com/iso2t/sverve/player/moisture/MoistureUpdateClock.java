@@ -1,9 +1,7 @@
 package com.iso2t.sverve.player.moisture;
 
-/**
- * One second of eligible active wetness updates; independent of temperature configuration.
- */
 public final class MoistureUpdateClock {
+
 	private int elapsedTicks;
 
 	public boolean advance () {

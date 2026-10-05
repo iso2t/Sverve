@@ -11,6 +11,7 @@ import java.util.function.UnaryOperator;
 
 @RequiredArgsConstructor
 public final class PlayerMoisture {
+
 	@NonNull
 	private final MoistureStorage storage;
 

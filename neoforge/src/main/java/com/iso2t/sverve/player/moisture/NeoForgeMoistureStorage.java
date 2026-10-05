@@ -11,10 +11,11 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 public final class NeoForgeMoistureStorage implements MoistureStorage {
-	private final DeferredRegister<AttachmentType<?>>           attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
-	private final Supplier<AttachmentType<MoistureState>>       moisture    = attachments.register("moisture", () -> AttachmentType.builder(MoistureState::dry).serialize(MoisturePersistence.CODEC).build());
-	// No copyOnDeath: death respawn starts dry regardless of keepInventory.
-	private final Supplier<AttachmentType<MoistureUpdateClock>> clock       = attachments.register("moisture_clock", () -> AttachmentType.builder(MoistureUpdateClock::new).build());
+
+	private final DeferredRegister<AttachmentType<?>>     attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
+	private final Supplier<AttachmentType<MoistureState>> moisture    = attachments.register("moisture", () -> AttachmentType.builder(MoistureState::dry).serialize(MoisturePersistence.CODEC).build());
+
+	private final Supplier<AttachmentType<MoistureUpdateClock>> clock = attachments.register("moisture_clock", () -> AttachmentType.builder(MoistureUpdateClock::new).build());
 
 	public void register (IEventBus modBus) {
 		attachments.register(modBus);
@@ -31,7 +32,7 @@ public final class NeoForgeMoistureStorage implements MoistureStorage {
 	}
 
 	@Override
-	public MoistureUpdateClock clock (ServerPlayer player) {
+	public MoistureUpdateClock getClock (ServerPlayer player) {
 		return player.getData(clock);
 	}
 }

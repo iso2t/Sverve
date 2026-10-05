@@ -14,12 +14,16 @@ java {
 }
 
 dependencies {
-    // HI supplies its API at runtime only when the optional mod is installed.
     compileOnly("com.iso2t.heavyinventories:api:${heavyinventories_version}") { transitive = false }
-    compileOnly "org.projectlombok:lombok:${lombok_version}"
-    annotationProcessor "org.projectlombok:lombok:${lombok_version}"
-    testCompileOnly "org.projectlombok:lombok:${lombok_version}"
-    testAnnotationProcessor "org.projectlombok:lombok:${lombok_version}"
+}
+
+sourceSets.configureEach {
+    dependencies.add(compileOnlyConfigurationName, "org.projectlombok:lombok:${lombok_version}")
+    dependencies.add(annotationProcessorConfigurationName, "org.projectlombok:lombok:${lombok_version}")
+}
+
+tasks.withType(Javadoc).configureEach {
+    options.addBooleanOption('Xdoclint:all,-missing', true)
 }
 
 repositories {
@@ -32,7 +36,7 @@ repositories {
             includeGroup 'com.iso2t.heavyinventories'
         }
     }
-    // https://docs.gradle.org/current/userguide/declaring_repositories.html#declaring_content_exclusively_found_in_one_repository
+
     exclusiveContent {
         forRepository {
             maven {
@@ -51,39 +55,38 @@ tasks.withType(Jar).configureEach {
 }
 
 jar {
-
     manifest {
         attributes([
-                'Specification-Title'   : mod_name,
-                'Specification-Vendor'  : mod_author,
-                'Specification-Version' : project.jar.archiveVersion,
-                'Implementation-Title'  : project.name,
-                'Implementation-Version': project.jar.archiveVersion,
-                'Implementation-Vendor' : mod_author,
-                'Built-On-Minecraft'    : minecraft_version
+            'Specification-Title'   : mod_name,
+            'Specification-Vendor'  : mod_author,
+            'Specification-Version' : project.jar.archiveVersion,
+            'Implementation-Title'  : project.name,
+            'Implementation-Version': project.jar.archiveVersion,
+            'Implementation-Vendor' : mod_author,
+            'Built-On-Minecraft'    : minecraft_version
         ])
     }
 }
 
 processResources {
     var expandProps = [
-            'version'                      : version,
-            'group'                        : project.group, //Else we target the task's group.
-            'minecraft_version'            : minecraft_version,
-            'minecraft_version_range'      : minecraft_version_range,
-            'fabric_version'               : fabric_version,
-            'fabric_loader_version'        : fabric_loader_version,
-            'mod_name'                     : mod_name,
-            'mod_author'                   : mod_author,
-            'mod_id'                       : mod_id,
-            'license'                      : license,
-            'description'                  : project.description,
-            'neoforge_version'             : neoforge_version,
-            'neoforge_loader_version_range': neoforge_loader_version_range,
-            'credits'                      : credits,
-            'java_version'                 : java_version,
-            'easyconfig_version'           : easyconfig_version,
-            'heavyinventories_min_version' : heavyinventories_min_version
+        'version'                      : version,
+        'group'                        : project.group,
+        'minecraft_version'            : minecraft_version,
+        'minecraft_version_range'      : minecraft_version_range,
+        'fabric_version'               : fabric_version,
+        'fabric_loader_version'        : fabric_loader_version,
+        'mod_name'                     : mod_name,
+        'mod_author'                   : mod_author,
+        'mod_id'                       : mod_id,
+        'license'                      : license,
+        'description'                  : project.description,
+        'neoforge_version'             : neoforge_version,
+        'neoforge_loader_version_range': neoforge_loader_version_range,
+        'credits'                      : credits,
+        'java_version'                 : java_version,
+        'easyconfig_version'           : easyconfig_version,
+        'heavyinventories_min_version' : heavyinventories_min_version
     ]
 
     var jsonExpandProps = expandProps.collectEntries {

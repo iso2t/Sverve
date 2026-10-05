@@ -18,6 +18,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudStatusBarHeightRegistr
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 
 public final class SverveFabricClient implements ClientModInitializer {
+
 	@Getter
 	private final ClientThirstState      thirst      = new ClientThirstState();
 	@Getter
@@ -27,21 +28,35 @@ public final class SverveFabricClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient () {
-		ClientPlayNetworking.registerGlobalReceiver(MoistureSyncPayload.TYPE, (payload, context) -> moisture.accept(payload.getSnapshot()));
-		ClientPlayConnectionEvents.INIT.register((handler, client) -> moisture.clear());
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> moisture.clear());
+		registerNetworking();
+		registerConnections();
+		registerHud();
+	}
+
+	private void registerNetworking () {
+		ClientPlayNetworking.registerGlobalReceiver(MoistureSyncPayload.TYPE, (payload, _) -> moisture.accept(payload.snapshot()));
+		ClientPlayNetworking.registerGlobalReceiver(ThirstSyncPayload.TYPE, (payload, _) -> thirst.accept(payload.snapshot()));
+		ClientPlayNetworking.registerGlobalReceiver(TemperatureSyncPayload.TYPE, (payload, _) -> temperature.accept(payload.snapshot()));
+	}
+
+	private void registerConnections () {
+		ClientPlayConnectionEvents.INIT.register((_, _) -> clear());
+		ClientPlayConnectionEvents.DISCONNECT.register((_, _) -> clear());
+	}
+
+	private void clear () {
+		moisture.clear();
+		thirst.clear();
+		temperature.clear();
+	}
+
+	private void registerHud () {
 		var moistureHud = new MoistureHud(moisture);
-		ClientPlayNetworking.registerGlobalReceiver(ThirstSyncPayload.TYPE, (payload, context) -> thirst.accept(payload.getSnapshot()));
-		ClientPlayConnectionEvents.INIT.register((handler, client) -> thirst.clear());
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> thirst.clear());
-		ClientPlayNetworking.registerGlobalReceiver(TemperatureSyncPayload.TYPE, (payload, context) -> temperature.accept(payload.getSnapshot()));
-		ClientPlayConnectionEvents.INIT.register((handler, client) -> temperature.clear());
-		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> temperature.clear());
 		var temperatureHud = new TemperatureHud(temperature);
-		HudElementRegistry.attachElementAfter(VanillaHudElements.FOOD_BAR, TemperatureHud.LAYER, (graphics, delta) -> temperatureHud.extract(graphics));
-		HudElementRegistry.attachElementAfter(TemperatureHud.LAYER, MoistureHud.LAYER, (graphics, delta) -> moistureHud.extract(graphics));
+		HudElementRegistry.attachElementAfter(VanillaHudElements.FOOD_BAR, TemperatureHud.LAYER, (graphics, _) -> temperatureHud.extract(graphics));
+		HudElementRegistry.attachElementAfter(TemperatureHud.LAYER, MoistureHud.LAYER, (graphics, _) -> moistureHud.extract(graphics));
 		var hud = new ThirstHud(thirst);
-		HudElementRegistry.attachElementAfter(VanillaHudElements.AIR_BAR, ThirstHud.LAYER, (graphics, delta) -> hud.extract(graphics, graphics.guiHeight() - HudStatusBarHeightRegistry.getHeight(ThirstHud.LAYER)));
-		HudStatusBarHeightRegistry.addRight(ThirstHud.LAYER, player -> hud.isVisible() ? ThirstHud.ROW_HEIGHT : 0);
+		HudElementRegistry.attachElementAfter(VanillaHudElements.AIR_BAR, ThirstHud.LAYER, (graphics, _) -> hud.extract(graphics, graphics.guiHeight() - HudStatusBarHeightRegistry.getHeight(ThirstHud.LAYER)));
+		HudStatusBarHeightRegistry.addRight(ThirstHud.LAYER, _ -> hud.isVisible() ? ThirstHud.ROW_HEIGHT : 0);
 	}
 }

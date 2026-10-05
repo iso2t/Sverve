@@ -1,17 +1,11 @@
 package com.iso2t.sverve.survival.temperature;
 
-import com.iso2t.sverve.survival.SurvivalMath;
-import lombok.Value;
+import com.iso2t.sverve.survival.Mth;
 
-@Value
-public class TemperatureState {
-	/**
-	 * Normalized body exposure: -1 freezing, 0 comfortable, 1 overheating.
-	 */
-	double exposure;
+public record TemperatureState(double exposure) {
 
 	public TemperatureState (double exposure) {
-		this.exposure = SurvivalMath.requireRange(exposure, -1.0, 1.0, "exposure");
+		this.exposure = Mth.requireRange(exposure, -1.0, 1.0, "exposure");
 	}
 
 	public static TemperatureState comfortable () {

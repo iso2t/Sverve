@@ -11,14 +11,15 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import java.util.function.Supplier;
 
 public final class NeoForgeTemperatureStorage implements TemperatureStorage {
-	private final DeferredRegister<AttachmentType<?>>              attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
-	private final Supplier<AttachmentType<TemperatureState>>       temperature = attachments.register("temperature", () -> AttachmentType.builder(TemperatureState::comfortable).serialize(TemperaturePersistence.CODEC).build());
-	// No copyOnDeath: death respawn is comfortable even with keepInventory enabled.
+
+	private final DeferredRegister<AttachmentType<?>>        attachments = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, Constants.MOD_ID);
+	private final Supplier<AttachmentType<TemperatureState>> temperature = attachments.register("temperature", () -> AttachmentType.builder(TemperatureState::comfortable).serialize(TemperaturePersistence.CODEC).build());
+
 	private final Supplier<AttachmentType<TemperatureUpdateClock>> clock       = attachments.register("temperature_clock", () -> AttachmentType.builder(TemperatureUpdateClock::new).build());
 	private final Supplier<AttachmentType<TemperatureDamageTimer>> damageTimer = attachments.register("temperature_damage_timer", () -> AttachmentType.builder(TemperatureDamageTimer::new).build());
 
 	@Override
-	public TemperatureDamageTimer damageTimer (ServerPlayer player) {
+	public TemperatureDamageTimer getDamageTimer (ServerPlayer player) {
 		return player.getData(damageTimer);
 	}
 
@@ -37,7 +38,7 @@ public final class NeoForgeTemperatureStorage implements TemperatureStorage {
 	}
 
 	@Override
-	public TemperatureUpdateClock clock (ServerPlayer player) {
+	public TemperatureUpdateClock getClock (ServerPlayer player) {
 		return player.getData(clock);
 	}
 }

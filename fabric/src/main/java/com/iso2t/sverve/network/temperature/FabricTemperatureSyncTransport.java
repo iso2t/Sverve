@@ -9,6 +9,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class FabricTemperatureSyncTransport implements TemperatureSyncTransport {
+
 	private final AttachmentType<TemperatureSyncTracker> tracker = AttachmentRegistry.create(Identifier.fromNamespaceAndPath(Constants.MOD_ID, "temperature_sync"), builder -> builder.initializer(TemperatureSyncTracker::new));
 
 	public FabricTemperatureSyncTransport () {
@@ -16,7 +17,7 @@ public final class FabricTemperatureSyncTransport implements TemperatureSyncTran
 	}
 
 	@Override
-	public TemperatureSyncTracker tracker (ServerPlayer player) {
+	public TemperatureSyncTracker getTracker (ServerPlayer player) {
 		return player.getAttachedOrCreate(tracker);
 	}
 

@@ -2,11 +2,9 @@ package com.iso2t.sverve.survival;
 
 import lombok.experimental.UtilityClass;
 
-/**
- * Numeric invariants shared by survival values.
- */
 @UtilityClass
-public class SurvivalMath {
+public class Mth {
+
 	public static double requireRange (double value, double min, double max, String name) {
 		if (!Double.isFinite(value) || value < min || value > max) {
 			throw new IllegalArgumentException(name + " must be finite and between " + min + " and " + max);

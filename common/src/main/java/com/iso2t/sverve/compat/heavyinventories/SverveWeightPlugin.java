@@ -8,11 +8,9 @@ import com.iso2t.sverve.Constants;
 import com.iso2t.sverve.player.exertion.CarriedLoad;
 import net.minecraft.resources.Identifier;
 
-/**
- * Loaded exclusively by HI's plugin discovery; Sverve's normal bootstrap has no HI references.
- */
 @HIPlugin
 public final class SverveWeightPlugin implements HeavyInventoriesPlugin {
+
 	@Override
 	public Identifier id () {
 		return Identifier.fromNamespaceAndPath(Constants.MOD_ID, "carried_load");

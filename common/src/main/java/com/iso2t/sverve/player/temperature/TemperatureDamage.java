@@ -12,6 +12,7 @@ import net.minecraft.world.damagesource.DamageType;
 
 @UtilityClass
 public class TemperatureDamage {
+
 	public static final ResourceKey<DamageType> FREEZING    = key("freezing");
 	public static final ResourceKey<DamageType> OVERHEATING = key("overheating");
 

@@ -11,11 +11,9 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 
-/**
- * Reads current worn armor for exposure and penalties; inventory and held items never contribute.
- */
 @UtilityClass
 public class TemperatureProtection {
+
 	public static final  ResourceKey<Enchantment> INSULATION         = key("insulation");
 	public static final  ResourceKey<Enchantment> HEAT_PROTECTION    = key("heat_protection");
 	public static final  ResourceKey<Enchantment> THERMAL_PROTECTION = key("thermal_protection");
@@ -27,11 +25,10 @@ public class TemperatureProtection {
 
 	private static int levels (ServerPlayer player, ResourceKey<Enchantment> key) {
 		var enchantment = player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(key);
-		int total = 0;
+		var total = 0;
 		for (var slot : ARMOR) {
 			var piece = player.getItemBySlot(slot);
 			if (piece.is(enchantment.value().getSupportedItems())) {
-				// Commands can supply oversized levels; a piece still contributes at most IV.
 				total += Math.min(4, EnchantmentHelper.getItemEnchantmentLevel(enchantment, piece));
 			}
 		}

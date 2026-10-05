@@ -1,4 +1,3 @@
-// Two separate JVMs share an isolated world; no development saves are touched.
 tasks.register('prepareLifecycleCheck') {
     doLast {
         def directory = layout.buildDirectory.dir('lifecycle-check').get().asFile

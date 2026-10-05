@@ -7,11 +7,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 
-/**
- * Plain drinkable water keeps vanilla item use and stacks up to sixteen.
- */
 @UtilityClass
 public class WaterBottles {
+
 	public static final int MAX_STACK_SIZE = 16;
 
 	public static boolean isPlainWater (ItemInstance item) {

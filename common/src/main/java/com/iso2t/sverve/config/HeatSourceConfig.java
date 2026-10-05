@@ -1,4 +1,4 @@
-package com.iso2t.sverve.survival.environment;
+package com.iso2t.sverve.config;
 
 import com.iso2t.easyconfig.api.annotations.Comment;
 import com.iso2t.easyconfig.api.value.wrappers.BooleanValue;
@@ -8,6 +8,7 @@ import lombok.Getter;
 
 @Getter
 public final class HeatSourceConfig {
+
 	@Comment("Allow nearby lit campfires, placed torches, and lava to warm players and speed up drying.")
 	private final BooleanValue enabled = BooleanValue.of(true);
 

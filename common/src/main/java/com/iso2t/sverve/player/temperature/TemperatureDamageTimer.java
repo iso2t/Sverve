@@ -4,11 +4,9 @@ import com.iso2t.sverve.survival.temperature.TemperatureBand;
 import lombok.Getter;
 import lombok.NonNull;
 
-/**
- * Transient continuous exposure time, restarted on recovery or switching extremes.
- */
 @Getter
 public final class TemperatureDamageTimer {
+
 	private TemperatureBand band;
 	private int             elapsedTicks;
 

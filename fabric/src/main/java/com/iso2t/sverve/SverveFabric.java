@@ -14,13 +14,14 @@ import net.fabricmc.api.ModInitializer;
 
 @Getter
 public final class SverveFabric implements ModInitializer {
+
 	private SverveRuntime runtime;
 
 	@Override
 	public void onInitialize () {
 		runtime = Sverve.initialize(new FabricThirstStorage(), new FabricThirstSyncTransport(), new FabricTemperatureStorage(), new FabricTemperatureSyncTransport(), new FabricMoistureStorage(), new FabricMoistureSyncTransport());
-		FabricThirstLifecycle.register(runtime.getThirstSynchronizer());
-		FabricThirstGameplay.register(runtime.getThirstGameplay());
-		FabricTemperatureEvents.register(runtime.getTemperatureGameplay());
+		FabricThirstLifecycle.register(runtime.thirst().synchronizer());
+		FabricThirstGameplay.register(runtime.thirst().gameplay());
+		FabricTemperatureEvents.register(runtime.temperature().gameplay());
 	}
 }

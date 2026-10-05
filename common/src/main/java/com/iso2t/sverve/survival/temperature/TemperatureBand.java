@@ -1,15 +1,13 @@
 package com.iso2t.sverve.survival.temperature;
 
-import com.iso2t.sverve.survival.SurvivalMath;
+import com.iso2t.sverve.survival.Mth;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Ordered display bands. Extreme warnings enter at damage thresholds; recovery retains hysteresis.
- */
 @Getter
 @RequiredArgsConstructor
 public enum TemperatureBand {
+
 	FREEZING(0),
 	COLD(1),
 	NORMAL(2),
@@ -32,7 +30,7 @@ public enum TemperatureBand {
 	}
 
 	public static TemperatureBand classify (double exposure) {
-		SurvivalMath.requireRange(exposure, -1.0, 1.0, "exposure");
+		Mth.requireRange(exposure, -1.0, 1.0, "exposure");
 		if (exposure <= -0.75) return FREEZING;
 		if (exposure < -0.25) return COLD;
 		if (exposure <= 0.25) return NORMAL;
@@ -43,7 +41,7 @@ public enum TemperatureBand {
 	public static TemperatureBand stabilize (TemperatureBand previous, double exposure) {
 		var actual = classify(exposure);
 		if (previous == null || actual == FREEZING || actual == HOT) return actual;
-		int index = previous.ordinal();
+		var index = previous.ordinal();
 		while (index > 0 && exposure < BOUNDARIES[index - 1] - HYSTERESIS) index--;
 		while (index < BOUNDARIES.length && exposure > BOUNDARIES[index] + HYSTERESIS) index++;
 		return values()[index];

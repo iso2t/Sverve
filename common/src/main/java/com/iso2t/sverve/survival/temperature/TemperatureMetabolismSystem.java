@@ -1,13 +1,12 @@
 package com.iso2t.sverve.survival.temperature;
 
+import com.iso2t.sverve.config.TemperatureConfig;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
-/**
- * Numeric consequences for body exposure; hunger and healing mechanics remain vanilla-owned.
- */
 @RequiredArgsConstructor
 public final class TemperatureMetabolismSystem {
+
 	@NonNull
 	private final TemperatureConfig config;
 
@@ -22,17 +21,17 @@ public final class TemperatureMetabolismSystem {
 		};
 	}
 
-	public double foodExhaustionPerSecond (double exposure) {
-		return foodExhaustionPerSecond(exposure, TemperatureProtectionScore.NONE);
+	public double foodExhaustion (double exposure) {
+		return foodExhaustion(exposure, TemperatureProtectionScore.NONE);
 	}
 
-	public double foodExhaustionPerSecond (double exposure, @NonNull TemperatureProtectionScore protection) {
+	public double foodExhaustion (double exposure, @NonNull TemperatureProtectionScore protection) {
 		double exhaustion = switch (band(exposure)) {
 			case WARM -> config.getWarmFoodExhaustion().get();
 			case HOT -> config.getHotFoodExhaustion().get();
 			default -> 0;
 		};
-		return exhaustion * (1 - protection.getHeatReduction());
+		return exhaustion * (1 - protection.heatReduction());
 	}
 
 	public int healingInterval (int original, double exposure) {
@@ -41,12 +40,12 @@ public final class TemperatureMetabolismSystem {
 
 	public int healingInterval (int original, double exposure, @NonNull TemperatureProtectionScore protection) {
 		if (original < 1) throw new IllegalArgumentException("Healing interval must be positive");
-		double multiplier = switch (band(exposure)) {
+		var multiplier = switch (band(exposure)) {
 			case COLD -> config.getColdHealingIntervalMultiplier().get();
 			case FREEZING -> config.getFreezingHealingIntervalMultiplier().get();
 			default -> 1;
 		};
-		double protectedMultiplier = 1 + (multiplier - 1) * (1 - protection.getColdReduction());
+		var protectedMultiplier = 1 + (multiplier - 1) * (1 - protection.coldReduction());
 		return (int) Math.min(Integer.MAX_VALUE, Math.ceil(original * protectedMultiplier));
 	}
 

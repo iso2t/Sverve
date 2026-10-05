@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(LivingEntity.class)
 public abstract class LivingEntityConsumptionMixin {
+
 	@WrapOperation(method = "completeUsingItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;finishUsingItem(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;)Lnet/minecraft/world/item/ItemStack;"))
 	private ItemStack sverve$afterItemUse (ItemStack stack, Level level, LivingEntity user, Operation<ItemStack> original) {
 		if (!(user instanceof ServerPlayer player)) return original.call(stack, level, user);

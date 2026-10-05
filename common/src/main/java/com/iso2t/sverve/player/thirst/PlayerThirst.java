@@ -10,11 +10,9 @@ import net.minecraft.world.level.GameType;
 import java.util.Objects;
 import java.util.function.UnaryOperator;
 
-/**
- * Server-side access to thirst. Load/save remain active for exempt players.
- */
 @RequiredArgsConstructor
 public final class PlayerThirst {
+
 	@NonNull
 	private final ThirstStorage storage;
 
@@ -22,9 +20,6 @@ public final class PlayerThirst {
 		return storage.get(player);
 	}
 
-	/**
-	 * Drain and drink handlers use this gate to leave exempt players unchanged.
-	 */
 	public ThirstState update (@NonNull ServerPlayer player, @NonNull UnaryOperator<ThirstState> change) {
 		ThirstState current = get(player);
 		if (!isEligible(player.gameMode(), player.isAlive())) return current;
